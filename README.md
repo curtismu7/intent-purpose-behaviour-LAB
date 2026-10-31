@@ -71,7 +71,7 @@ The header has a **Mock / Live** toggle on every page, and the banner and the mo
 ## Health, doctor and reset
 
 ```
-npm run doctor   # 15 checks; PORT=7109 npm run doctor to use a spare port
+npm run doctor   # 16 checks; PORT=7109 npm run doctor to use a spare port
 npm run reset    # clears the default workspace's runs and live baseline (the UI Reset also restores the policy and the diagram)
 ```
 
