@@ -3,20 +3,22 @@ import { visible } from "../safeText";
 
 // Every product claim carries this tag. It is on every tab, and in presenter mode too.
 export function ClaimTag({ label }) {
-  return <span className="tag tag--warn" data-testid="claim-tag">{label || "Ping release claim, UNVERIFIED on our tenant"}</span>;
+  return <span className="tag" data-state="warn" data-testid="claim-tag">{label || "Ping release claim, UNVERIFIED on our tenant"}</span>;
 }
 export function SourceTag({ swagger, source, labSource }) {
-  return <span className={`tag ${swagger ? "tag--ok" : ""}`} title={swagger ? source : labSource}>{swagger ? "console swagger name" : "lab-invented"}</span>;
+  return <span className="tag" data-state={swagger ? "ok" : undefined} title={swagger ? source : labSource}>{swagger ? "console swagger name" : "lab-invented"}</span>;
 }
 
+// Effect words (allow, alert, ask, deny) and check results map to a state for the tag colour.
+export const STATE = { allow: "ok", ok: "ok", alert: "warn", ask: "warn", warn: "warn", deny: "bad", bad: "bad" };
 const WORD = { allow: "ALLOW", alert: "ALERT", ask: "ASK A PERSON", deny: "DENY" };
 export function Verdict({ result }) {
   const d = result.decision;
   return (
-    <div className={`verdict verdict--${d}`} data-testid="verdict" role="status">
+    <div className="verdict" data-decision={d} data-testid="verdict" role="status">
       <div className="verdict__word" data-testid="verdict-word">{WORD[d] || d}</div>
       <div>Reason code: <span className="reason" data-testid="reason-code">{visible(result.reasonCode)}</span></div>
-      <div className="muted-on">{d === "deny" ? "A hard refusal, from the deterministic tier." : d === "ask" ? "Held for a person to approve. Not blocked, not silently allowed." : d === "alert" ? "The call goes through and an alert is raised." : result.decidedBy === "none" ? "Nothing refused, nothing to ask." : ""}</div>
+      <div className="muted">{d === "deny" ? "A hard refusal, from the deterministic tier." : d === "ask" ? "Held for a person to approve. Not blocked, not silently allowed." : d === "alert" ? "The call goes through and an alert is raised." : result.decidedBy === "none" ? "Nothing refused, nothing to ask." : ""}</div>
     </div>
   );
 }
@@ -31,7 +33,7 @@ export function Checks({ checks, caption, testId }) {
         {checks.map((c) => (
           <tr key={c.id}>
             <td><code>{c.id}</code></td>
-            <td><span className={`tag ${c.ok ? "tag--ok" : "tag--bad"}`}>{c.ok ? "pass" : "FAIL"}</span></td>
+            <td><span className="tag" data-state={c.ok ? "ok" : "bad"}>{c.ok ? "pass" : "FAIL"}</span></td>
             <td>{visible(c.detail)}</td>
           </tr>
         ))}
@@ -70,7 +72,7 @@ export function Hops({ hops, traceId }) {
 export function ConsoleConfig({ title, value, source }) {
   return (
     <details className="cfg" data-testid="console-config">
-      <summary>{title} <span className="tag tag--ok">console swagger names</span></summary>
+      <summary>{title} <span className="tag" data-state="ok">console swagger names</span></summary>
       <p className="muted">{source}</p>
       <Json value={value} label={title} />
     </details>

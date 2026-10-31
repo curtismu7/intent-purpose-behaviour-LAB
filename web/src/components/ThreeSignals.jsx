@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { postJson } from "../api";
 import { visible } from "../safeText";
-import { ClaimTag, ConsoleConfig, Hops, Verdict } from "./Bits";
+import { ClaimTag, ConsoleConfig, Hops, STATE, Verdict } from "./Bits";
 import Json from "./Json";
 import PolicyEditor from "./PolicyEditor";
 
@@ -40,7 +40,7 @@ function PurposePanel({ s, agent, claim }) {
       <h2>Purpose <span className="muted">was it ever in scope?</span></h2>
       <ClaimTag label={claim} />
       <p>Key <code>{visible(agent)}</code> declares: <b data-testid="declared">{p.declared ? visible(p.declared) : "nothing"}</b></p>
-      <p>Status: <span className={`tag ${p.status === "in-scope" ? "tag--ok" : "tag--bad"}`} data-testid="purpose-status">{p.status}</span> <span className="tag">may refuse</span></p>
+      <p>Status: <span className="tag" data-state={p.status === "in-scope" ? "ok" : "bad"} data-testid="purpose-status">{p.status}</span> <span className="tag">may refuse</span></p>
       {p.violations.length > 0 && <ul className="plain">{p.violations.map((v) => <li key={v.axis}><code>{v.axis}</code>: {visible(v.detail)}</li>)}</ul>}
       {p.status === "none" && <p className="muted">A key with no declared purpose cannot be checked against one. Policy decides whether that is refused.</p>}
     </section>
@@ -53,7 +53,7 @@ function BehaviourPanel({ s, claim }) {
     <section className="panel signal" aria-label="Behaviour" data-testid="panel-behaviour">
       <h2>Behaviour <span className="muted">does this agent do this?</span></h2>
       <ClaimTag label={claim} />
-      <p>Phase: <span className={`tag ${b.phase === "enforcing" ? "tag--ok" : "tag--warn"}`} data-testid="phase">{b.phase}</span> <span className="tag">alerts or asks, never denies</span></p>
+      <p>Phase: <span className="tag" data-state={b.phase === "enforcing" ? "ok" : "warn"} data-testid="phase">{b.phase}</span> <span className="tag">alerts or asks, never denies</span></p>
       <p className="muted">{PHASE_TEXT[b.phase]}. {b.callsSeen} calls seen (scoring from {b.minObservations}, enforcing from {b.enforceObservations}).</p>
       <p className="meter-line">Anomaly score read by the policy: <b data-testid="anomaly">{b.score}</b>{b.score !== b.raw && <span className="muted"> (the departure would be {b.raw}, not scored in this phase)</span>}</p>
       <div className="meter" role="img" aria-label={`anomaly ${b.score} of 100`}><span style={{ width: `${b.score}%` }} /></div>
@@ -65,7 +65,7 @@ function BehaviourPanel({ s, claim }) {
 function Tiers({ result }) {
   const det = result.reasons.filter((r) => r.tier === "deterministic");
   const sc = result.reasons.filter((r) => r.tier === "scored");
-  const row = (r) => <li key={r.code}><span className={`tag tag--${r.effect}`}>{r.effect}</span> <code>{visible(r.code)}</code> {visible(r.detail)}</li>;
+  const row = (r) => <li key={r.code}><span className="tag" data-state={STATE[r.effect]}>{r.effect}</span> <code>{visible(r.code)}</code> {visible(r.detail)}</li>;
   return (
     <div className="tiers" data-testid="tiers">
       <section className="panel" aria-label="Deterministic tier"><h3>Deterministic tier <span className="tag">the only tier that can refuse</span></h3>

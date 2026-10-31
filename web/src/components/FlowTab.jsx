@@ -11,7 +11,7 @@ function Result({ kind, r }) {
   return (
     <div className="flow" data-testid={`${kind}-result`}>
       <p className="muted" data-testid="token-label">{r.label}</p>
-      <div className={`verdict verdict--${r.accepted ? "allow" : "deny"}`} role="status">
+      <div className="verdict" data-decision={r.accepted ? "allow" : "deny"} role="status">
         <div className="verdict__word" data-testid="flow-verdict">{verdict}</div>
         <div>{kind === "obo" ? "The MCP server's own verification" : "The partner issuer's redemption and the partner API's verification"}</div>
       </div>

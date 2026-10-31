@@ -1,5 +1,6 @@
 // Preflight checks shared by `npm run doctor` and GET /api/health. Never prints a secret, needs no network.
 // Each check: { id, level: 'pass' | 'info' | 'fail', detail }.
+import fs from 'node:fs';
 import { assertBindAllowed, bindHost, portProblem, scanHosts, scanKeys, DEFAULT_PORT, PORT_MIN, PORT_MAX } from './safety.js';
 import { netguardSelfTest } from './netguard.js';
 import { DEFAULT_CAST, VERTICALS, unfilled } from './cast.js';
@@ -13,6 +14,8 @@ import { MOCK_TABLE } from './mockTable.js';
 import { runIdJag, runObo } from './oauth.js';
 import { InputError } from './call.js';
 
+export const settingsFile = (env = process.env) => env.STANDALONE_ENV || `${env.HOME || ''}/Development/.env`;
+
 export async function runChecks({ env = process.env, cast = DEFAULT_CAST } = {}) {
   const checks = [];
   const add = (id, level, detail) => checks.push({ id, level, detail });
@@ -20,7 +23,7 @@ export async function runChecks({ env = process.env, cast = DEFAULT_CAST } = {})
   const major = Number(process.versions.node.split('.')[0]);
   add('node', major >= 26 ? 'pass' : 'fail', `v${process.versions.node} (need >= 26)`);
 
-  try { add('mode', 'pass', `MODE=${modeFrom(env)} is the opening mode; the header toggle switches between mock and live, both loopback-only`); }
+  try { add('mode', 'pass', `IPB_LAB_MODE resolves to ${modeFrom(env)}, the opening mode (mock is the default; a bare MODE is ignored); the header toggle switches between mock and live, both loopback-only`); }
   catch (e) { add('mode', 'fail', e.message); }
 
   try { add('bind', 'pass', `${assertBindAllowed(bindHost(env), env)}${env.IPBLAB_BIND ? ' (IPBLAB_BIND opt-in)' : ' (loopback)'}`); }
@@ -29,6 +32,10 @@ export async function runChecks({ env = process.env, cast = DEFAULT_CAST } = {})
   const port = env.PORT === undefined || env.PORT === '' ? DEFAULT_PORT : Number(env.PORT);
   const problem = portProblem(port);
   add('port-range', problem ? 'fail' : 'pass', problem || `${port} is inside ${PORT_MIN}-${PORT_MAX} and not reserved`);
+
+  // The one shared settings file: optional, never printed. It should be mode 600.
+  try { const m = fs.statSync(settingsFile(env)).mode & 0o777; add('settings-file', m & 0o077 ? 'info' : 'pass', m & 0o077 ? 'the shared settings file is readable by others: chmod 600 it' : 'the shared settings file exists and is mode 600 (values are never printed)'); }
+  catch { add('settings-file', 'info', 'no shared settings file: mock mode needs none'); }
 
   // Each scripted call gives the decision the story says it does, in Mock (tables) and in Live (the real engine), in every vertical.
   const policy = clonePolicy();

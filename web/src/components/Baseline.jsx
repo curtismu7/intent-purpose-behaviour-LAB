@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getJson, postJson } from "../api";
 import { visible } from "../safeText";
-import { ClaimTag, ConsoleConfig } from "./Bits";
+import { ClaimTag, ConsoleConfig, STATE } from "./Bits";
 
 const PHASES = ["learning", "scoring", "enforcing"];
 
@@ -15,11 +15,11 @@ function Rows({ rows, story }) {
           {rows.map((r) => {
             const b = r.signals.behaviour;
             return (
-              <tr key={r.n} data-testid={`row-${r.n}`} className={`row--${r.decision}`}>
+              <tr key={r.n} data-testid={`row-${r.n}`} data-decision={r.decision}>
                 <td>{r.n}</td><td>{visible(story.baseline.titles[r.kind])}</td><td><code>{visible(r.call.tool)}</code></td>
-                <td><span className={`tag ${b.phase === "enforcing" ? "tag--ok" : "tag--warn"}`}>{b.phase}</span></td>
+                <td><span className="tag" data-state={b.phase === "enforcing" ? "ok" : "warn"}>{b.phase}</span></td>
                 <td>{b.score}{b.score !== b.raw ? <span className="muted"> (would be {b.raw})</span> : null}</td>
-                <td><span className={`tag tag--${r.decision}`}>{r.decision}</span></td><td><code>{visible(r.reasonCode)}</code></td>
+                <td><span className="tag" data-state={STATE[r.decision]}>{r.decision}</span></td><td><code>{visible(r.reasonCode)}</code></td>
               </tr>
             );
           })}
@@ -34,9 +34,9 @@ function Timeline({ calls, policy }) {
   const phase = policy.behaviour.Disabled ? "disabled" : calls < min ? "learning" : calls < enf ? "scoring" : "enforcing";
   return (
     <div className="timeline" data-testid="timeline">
-      <p className="phase-line">Enforcement is <b data-testid="enforcement">{phase === "enforcing" ? "ON" : "OFF"}</b>. Phase: <span className={`tag ${phase === "enforcing" ? "tag--ok" : "tag--warn"}`} data-testid="baseline-phase">{phase}</span> after {calls} call{calls === 1 ? "" : "s"}.</p>
+      <p className="phase-line">Enforcement is <b data-testid="enforcement">{phase === "enforcing" ? "ON" : "OFF"}</b>. Phase: <span className="tag" data-state={phase === "enforcing" ? "ok" : "warn"} data-testid="baseline-phase">{phase}</span> after {calls} call{calls === 1 ? "" : "s"}.</p>
       <div className="phases" role="img" aria-label={`phase ${phase}`}>
-        {PHASES.map((p) => <span key={p} className={`phase ${p === phase ? "phase--now" : ""}`}>{p}{p === "learning" ? ` (under ${min})` : p === "scoring" ? ` (${min} to ${enf - 1})` : ` (${enf}+)`}</span>)}
+        {PHASES.map((p) => <span key={p} className="phase" data-now={p === phase ? "true" : "false"}>{p}{p === "learning" ? ` (under ${min})` : p === "scoring" ? ` (${min} to ${enf - 1})` : ` (${enf}+)`}</span>)}
       </div>
       {phase !== "enforcing" && <p className="never" data-testid="never-blocked">A new agent is never blocked for being new: until {enf} calls the behaviour signal cannot alert, ask or deny. (Ping release claim, UNVERIFIED on our tenant.)</p>}
     </div>

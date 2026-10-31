@@ -63,7 +63,11 @@ test('package.json requires Node 26 and the Dockerfile uses a Node 26 base', () 
   assert.ok((read('Dockerfile').match(/^FROM node:26/gm) || []).length === 2);
 });
 
-test('README declares the tier, and the docs never use the word "door"', () => {
-  assert.match(read('README.md'), /\*\*Tier: Demo\.\*\*/);
+test('README follows the README standard, and the docs never use the word "door"', () => {
+  const readme = read('README.md');
+  assert.match(readme.split('\n')[0], /^# .* LAB$/);
+  assert.match(readme, /^Tier: Demo$/m);
+  assert.match(readme, /^Repo: https:\/\/github\.com\/ping-sandbox\/intent-purpose-behaviour-LAB$/m);
+  for (const h of ['## What is simulated', '## Run from a clone', '## Settings file', '## Ports, and what to do if the port is taken', '## Mock and live modes', '## Health, doctor and reset', '## Docker (optional)', '## Tests', '## Troubleshooting', '## Ownership']) assert.ok(readme.includes(h), h);
   for (const f of ['README.md', 'CLAUDE.md', 'docs/talk-track.md', 'docs/safety.md']) assert.ok(!/\bdoor\b/i.test(read(f)), f);
 });

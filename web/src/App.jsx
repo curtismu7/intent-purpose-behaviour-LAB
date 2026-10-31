@@ -90,10 +90,10 @@ export default function App() {
   return (
     <div className={`app${presenter ? " app--presenter" : ""}`}>
       <header>
-        <p className="banner" role="status" data-testid="banner">{banner}</p>
+        <p className="banner" data-state={mode === "live" ? "live" : undefined} role="status" data-testid="banner">{banner}</p>
         <div className="head">
           <div>
-            <h1>Intent, Purpose and Behaviour Lab</h1>
+            <h1 className="head__title">Intent Purpose Behaviour LAB</h1>
             {!presenter && story && <p className="intro">{story.intro}</p>}
           </div>
           <div className="head__tools">

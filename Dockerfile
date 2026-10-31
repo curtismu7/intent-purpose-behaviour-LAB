@@ -11,7 +11,7 @@ RUN npm run build -w web
 
 FROM node:26-alpine
 WORKDIR /app
-ENV NODE_ENV=production PORT=7100 MODE=mock
+ENV NODE_ENV=production PORT=7100 IPB_LAB_MODE=mock
 COPY package.json package-lock.json ./
 COPY web/package.json web/
 COPY server/package.json server/

@@ -1,6 +1,6 @@
 # OrbStack:  HOST_PORT=7100 docker compose up --build -d   ->  http://127.0.0.1:7100
 # The server binds 0.0.0.0 INSIDE the container (IPBLAB_BIND is the opt-in), but the port is published on loopback only.
-# Do not change the 127.0.0.1 below. HOST_PORT must stay in 7100-7149. MODE=live opens the page in Live mode (still loopback, no outbound).
+# Do not change the 127.0.0.1 below. HOST_PORT must stay in 7100-7149. IPB_LAB_MODE=live opens the page in Live mode (still loopback, no outbound).
 name: intent-purpose-behaviour-lab
 
 services:
@@ -11,7 +11,7 @@ services:
     environment:
       PORT: "7100"
       IPBLAB_BIND: 0.0.0.0
-      MODE: ${MODE:-mock}
+      IPB_LAB_MODE: ${IPB_LAB_MODE:-mock}
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]

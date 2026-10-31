@@ -1,4 +1,5 @@
-import { fileURLToPath } from 'node:url';
+import os from 'node:os';
+import path from 'node:path';
 import { installNetguard } from './netguard.js';
 import { startHttpServer, createApp } from './app.js';
 import { allPassed, runChecks } from './doctor.js';
@@ -7,7 +8,8 @@ import { modeFrom } from './config.js';
 
 installNetguard(); // before anything else can open a socket
 
-try { process.loadEnvFile(fileURLToPath(new URL('../../.env', import.meta.url))); } catch { /* no .env */ }
+// The one shared settings file (rulebook): ~/Development/.env, or the path in STANDALONE_ENV. Optional; values are never printed.
+try { process.loadEnvFile(process.env.STANDALONE_ENV || path.join(os.homedir(), 'Development', '.env')); } catch { /* no settings file */ }
 
 const checks = await runChecks();
 if (!allPassed(checks)) {

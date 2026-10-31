@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Background, BackgroundVariant, BaseEdge, Controls, EdgeLabelRenderer, getBezierPath, Handle, MarkerType, Position, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import DiagramStepBar from "./DiagramStepBar";
-import { useDiagramStepper } from "../hooks/useDiagramStepper";
+import { useDiagramStepper, STEP_TIME_OPTIONS } from "../hooks/useDiagramStepper";
 import { REFIT_EVENT, useFitOnResize } from "../hooks/useFitOnResize";
-import "./PatternDiagram.css";
+import { ClaimTag } from "./Bits";
 
 const FIT = { padding: 0.08 };
 const HANDLES = [["t", Position.Top], ["b", Position.Bottom], ["l", Position.Left], ["r", Position.Right]];
 
 function Box({ data }) {
   return (
-    <div className={`pat-node pat-node--${data.kind}${data.on ? " pat-node--on" : ""}`}>
+    <div className="pat-node" data-kind={data.kind} data-on={data.on ? "true" : "false"}>
       {HANDLES.map(([k, pos]) => (
         <span key={k}>
           <Handle id={`s-${k}`} type="source" position={pos} className="pat-handle" />
@@ -24,15 +23,14 @@ function Box({ data }) {
 }
 const nodeTypes = { box: Box };
 
-// An edge that draws its own label, so a reply along the same pair of boxes can sit above or below its partner
-// instead of on top of it. data.dy is the vertical nudge in pixels.
+// An edge that draws its own label, so a reply along the same pair of boxes can sit above or below its partner instead of on top of it.
 function LabelEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, data }) {
   const [path, lx, ly] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
   return (
     <>
       <BaseEdge id={id} path={path} markerEnd={markerEnd} />
       <EdgeLabelRenderer>
-        <div className={`pat-elabel${data.now ? " pat-elabel--now" : ""}${data.dim ? " pat-elabel--dim" : ""}`} data-testid="edge-label"
+        <div className="pat-elabel" data-now={data.now ? "true" : "false"} data-dim={data.dim ? "true" : "false"} data-testid="edge-label"
           style={{ transform: `translate(-50%, -50%) translate(${lx}px, ${ly + data.dy}px)` }}>{data.text}</div>
       </EdgeLabelRenderer>
     </>
@@ -65,7 +63,6 @@ function Canvas({ pattern, positions, onMove, stepper }) {
   const offs = labelOffsets(pattern.steps);
   const edges = pattern.steps.map((s, i) => {
     let [a, b] = sides(positions[s.from], positions[s.to]);
-    // A reply along the same pair of boxes leaves from the side instead, so the two arrows and labels do not overlap.
     if (pattern.steps.slice(0, i).some((o) => o.from === s.to && o.to === s.from)) [a, b] = a === "l" || a === "r" ? ["b", "b"] : ["r", "r"];
     const now = stepper.step === i;
     const seen = stepper.step >= 0 && i <= stepper.step;
@@ -87,6 +84,32 @@ function Canvas({ pattern, positions, onMove, stepper }) {
   );
 }
 
+// Simulate, pause, step, speed, stop; and Reset (positions and walkthrough).
+function Controls2({ stepper, onReset, caption }) {
+  const { step, total, active, paused } = stepper;
+  return (
+    <div className="dstep" data-testid="pattern-step-bar">
+      <div className="dstep__row">
+        <label className="inline">Step time{" "}
+          <select value={stepper.stepMs} onChange={(e) => stepper.setStepMs(Number(e.target.value))} disabled={active && !paused} data-testid="speed">
+            {STEP_TIME_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+        {!active ? <button type="button" onClick={stepper.simulate} data-testid="simulate">Simulate</button> : (
+          <>
+            <button type="button" onClick={stepper.prev} disabled={!paused}>Prev</button>
+            {paused ? <button type="button" onClick={stepper.resume}>Resume</button> : <button type="button" onClick={stepper.pause}>Pause</button>}
+            <button type="button" onClick={stepper.next} disabled={!paused}>Next</button>
+            <button type="button" onClick={stepper.stop}>Stop</button>
+          </>
+        )}
+        <button type="button" onClick={onReset} data-testid="pattern-reset">Reset positions and walkthrough</button>
+      </div>
+      <p className="dstep__caption" aria-live="polite">{active ? <><strong>Step {step + 1} of {total}</strong>{caption ? ` : ${caption}` : ""}</> : `Simulate walks the ${total} arrows in order.`}</p>
+    </div>
+  );
+}
+
 export default function PatternDiagram({ pattern, resetSignal = 0 }) {
   const initial = useMemo(() => Object.fromEntries(pattern.nodes.map((n) => [n.id, { x: n.x, y: n.y }])), [pattern]);
   const [positions, setPositions] = useState(initial);
@@ -99,20 +122,19 @@ export default function PatternDiagram({ pattern, resetSignal = 0 }) {
   useEffect(() => { if (seen.current !== resetSignal) { seen.current = resetSignal; reset(); } }, [resetSignal, reset]);
   return (
     <section className="pat" aria-label={pattern.title}>
-      <h2 className="pat__title">{pattern.title}</h2>
+      <h2 className="pat__title">{pattern.title} <ClaimTag /></h2>
       <p className="intro">{pattern.intro}</p>
-      <DiagramStepBar stepper={stepper} caption={step ? step.label : ""} testId="pattern-step-bar" />
-      <button type="button" className="pat-reset" onClick={reset} data-testid="pattern-reset">Reset positions and walkthrough</button>
+      <Controls2 stepper={stepper} onReset={reset} caption={step ? step.label : ""} />
       {step && (
-        <article className="track__now" data-testid="pattern-now">
-          <h3>Step {stepper.step + 1}: {step.label}</h3>
+        <article className="panel" data-testid="pattern-now">
+          <h3 className="panel__sub">Step {stepper.step + 1}: {step.label}</h3>
           <p>{step.say}</p>
         </article>
       )}
       <ReactFlowProvider>
         <Canvas pattern={pattern} positions={positions} onMove={onMove} stepper={stepper} />
       </ReactFlowProvider>
-      <p className="keys">Drag any box. Simulated; hosts are examples; Ping release claims UNVERIFIED on our tenant. Moved: {Object.keys(positions).filter((k) => positions[k].x !== initial[k].x || positions[k].y !== initial[k].y).length} box(es).</p>
+      <p className="muted">Drag any box. Simulated; hosts are examples; Ping release claims UNVERIFIED on our tenant. Moved: {Object.keys(positions).filter((k) => positions[k].x !== initial[k].x || positions[k].y !== initial[k].y).length} box(es).</p>
     </section>
   );
 }
