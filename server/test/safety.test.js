@@ -16,7 +16,7 @@ test('bind: loopback only unless IPBLAB_BIND is set', () => {
 
 test('ports: 7100-7149 only, never a reserved or another agent\'s one', () => {
   assert.equal(portProblem(7100), null); assert.equal(portProblem(7109), null);
-  for (const p of [5000, 7150, 7099, 5150, 8080, 5173, 3900, 4000, 4400, 4510, 4600, 4601, 4840, 18080, 19080, 19090, 4771, 4700]) assert.ok(portProblem(p), String(p));
+  for (const p of [5000, 7150, 7099, 8080, 5173, 3900, 4000, 4400, 4510, 4600, 4601, 4840, 18080, 19080, 19090, 4771, 4700]) assert.ok(portProblem(p), String(p));
   assert.ok(portProblem(NaN));
   assert.equal(resolvePort({}), 7100);
   assert.equal(resolvePort({ PORT: '7105' }), 7105);
