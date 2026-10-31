@@ -1,14 +1,16 @@
 // The diagrams are diagram-studio/1 DATA (server/diagrams/*.json), loaded by name and checked with the studio's own validator
 // copy. Nothing here builds nodes or edges by hand. Each step is one edge, walked in order by Simulate.
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { fillDeep } from './cast.js';
 import { validateDiagram } from './diagramStudioValidate.js';
 
-const DIR = new URL('../diagrams/', import.meta.url);
+const DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../diagrams');
 export const DIAGRAM_NAMES = ['three-signals', 'obo', 'id-jag'];
 
 export function loadDiagram(name) {
-  const doc = JSON.parse(fs.readFileSync(new URL(`${name}.json`, DIR), 'utf8'));
+  const doc = JSON.parse(fs.readFileSync(path.join(DIR, `${name}.json`), 'utf8'));
   const problems = validateDiagram(doc);
   if (problems.length) throw new Error(`diagram ${name} is not valid diagram-studio/1: ${problems.join('; ')}`);
   return doc;

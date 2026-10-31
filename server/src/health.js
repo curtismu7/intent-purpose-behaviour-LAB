@@ -1,10 +1,12 @@
 // GET /api/health, contract demo-health/1 (demo-shelf docs/health-contract.md). Public, GET only, no extra fields.
 // The state comes from the doctor checks, refreshed in the background every 60 s; a request never runs them.
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { allPassed, runChecks as defaultChecks } from './doctor.js';
 
-const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const { version } = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../package.json'), 'utf8'));
 const DEMO = { id: 'intent-purpose-behaviour-lab', name: 'Intent, Purpose and Behaviour Lab', version };
 
 export function createHealth({ runChecks = defaultChecks, now = () => new Date(), intervalMs = 60_000 } = {}) {
