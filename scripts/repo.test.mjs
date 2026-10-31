@@ -19,7 +19,7 @@ test('the shelf entry is valid and portable: relative composeFile, loopback url,
   assert.equal(e.kind, 'Demo');
   assert.equal(e.healthPath, '/api/health');
   assert.match(e.url, /^http:\/\/localhost:71\d\d$/);
-  assert.ok(!('catalogId' in e), 'no catalog id until the owner assigns one');
+  assert.equal(e.catalogId, 'D101', 'catalog id assigned 2026-10-31 (owner delegated the choice)');
   assert.equal(e.composeFile, 'intent-purpose-behaviour-LAB/docker-compose.yml');
   assert.ok(!path.isAbsolute(e.composeFile), 'composeFile must be relative or a placeholder');
   assert.ok(!/\/Users\//.test(JSON.stringify(e)), 'no absolute home path');

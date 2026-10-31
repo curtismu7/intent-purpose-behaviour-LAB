@@ -9,7 +9,8 @@
       "healthPath": "/api/health",
       "composeFile": "intent-purpose-behaviour-LAB/docker-compose.yml",
       "composeOverlays": [],
-      "notes": "Host-run: ./scripts/run.sh (port 7100). Docker: HOST_PORT=7100 docker compose up --build -d (published on 127.0.0.1 only). Mock and Live are both loopback-only with zero outbound calls. No catalog id yet. Sibling lab for the standalone ID-JAG walkthrough: id-jag-standalone-LAB (never imported)."
+      "notes": "Host-run: ./scripts/run.sh (port 7100). Docker: HOST_PORT=7100 docker compose up --build -d (published on 127.0.0.1 only). Mock and Live are both loopback-only with zero outbound calls. No catalog id yet. Sibling lab for the standalone ID-JAG walkthrough: id-jag-standalone-LAB (never imported).",
+      "catalogId": "D101"
     }
   ]
 }

@@ -6,7 +6,7 @@
   "demo": {
     "id": "intent-purpose-behaviour-lab",
     "name": "Intent, Purpose and Behaviour Lab",
-    "catalog": "D0",
+    "catalog": "D101",
     "baseUrl": "http://localhost:7100",
     "doctor": "/api/health",
     "tags": [

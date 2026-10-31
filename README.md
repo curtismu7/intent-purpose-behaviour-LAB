@@ -4,7 +4,7 @@ A simulation of the "Intent, Purpose and Behaviour" release claims, plus the two
 
 Tier: Demo
 Repo: https://github.com/ping-sandbox/intent-purpose-behaviour-LAB
-Catalog: none assigned yet (the content pack carries the placeholder D0)
+Catalog: D101
 
 Source: the Ping ID4AI Workforce H2 2026 deck, slide 48 (release 2026-11-02). **Every product claim is a Ping release claim, UNVERIFIED on our tenant.** Nothing here calls a real gateway, identity provider or tenant, and nothing leaves your machine.
 

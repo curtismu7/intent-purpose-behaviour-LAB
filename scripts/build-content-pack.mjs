@@ -23,7 +23,7 @@ export function buildPack() {
     id: 'intent-purpose-behaviour-lab',
     title: 'Intent, Purpose and Behaviour Lab',
     version,
-    demo: { id: 'intent-purpose-behaviour-lab', name: 'Intent, Purpose and Behaviour Lab', catalog: 'D0', baseUrl: 'http://localhost:7100', doctor: '/api/health', tags: ['mcp', 'agent', 'policy', 'privilege', 'on-behalf-of', 'id-jag', 'simulated'] },
+    demo: { id: 'intent-purpose-behaviour-lab', name: 'Intent, Purpose and Behaviour Lab', catalog: 'D101', baseUrl: 'http://localhost:7100', doctor: '/api/health', tags: ['mcp', 'agent', 'policy', 'privilege', 'on-behalf-of', 'id-jag', 'simulated'] },
     glossary: [
       { id: 'three-signals', term: 'Three signals, not one score', definition: `Intent (what is being attempted), purpose (was it ever in scope) and behaviour (does this agent do this) are asked of every call and kept separate, so a policy can say which one fired. ${UNV}`, aliases: ['intent purpose behaviour'] },
       { id: 'intent', term: 'Intent', definition: `Classifies what a request is actually trying to do (exfiltrate data, change a payee, look up one record) rather than what it literally says, combining deterministic patterns with semantic similarity. In this lab the similarity is a word-overlap stand-in. ${UNV}`, aliases: ['AIIntent'] },
