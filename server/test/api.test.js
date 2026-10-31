@@ -179,3 +179,24 @@ test('ZERO outbound attempts: the whole API, both modes, real signing included, 
   assert.deepEqual(guard.attempts.slice(before), []);
   guard.restore();
 });
+
+test('a non-string vertical (object, array, number) falls back to the default and never causes a 500, on any endpoint that takes one', async () => {
+  const bad = [{ toString: 1 }, ['finance'], 5, null, true, { __proto__: 1 }, '__proto__', 'constructor', 'toString'];
+  await withServer(async (url) => {
+    for (const vertical of bad) {
+      for (const [path, body] of [['/api/evaluate', { mode: 'mock', scenario: 'legit-lookup' }], ['/api/evaluate', { mode: 'live', scenario: 'legit-lookup' }], ['/api/baseline', { mode: 'mock' }], ['/api/baseline', { mode: 'live', kind: 'normal' }], ['/api/obo', { mode: 'mock', scenario: 'ok' }], ['/api/obo', { mode: 'live', scenario: 'ok' }], ['/api/idjag', { mode: 'mock', scenario: 'ok' }]]) {
+        const r = await post(url, path, { ...body, vertical });
+        assert.equal(r.status, 200, `${path} ${JSON.stringify(vertical)} -> ${r.status}`);
+      }
+    }
+    for (const q of ['vertical[toString]=1', 'vertical[]=finance', 'vertical=__proto__', 'vertical=constructor']) {
+      assert.equal((await fetch(`${url}/api/story?${q}`)).status, 200, q);
+      assert.equal((await fetch(`${url}/api/diagram?name=obo&${q}`)).status, 200, q);
+      assert.equal((await fetch(`${url}/api/baseline?mode=mock&${q}`)).status, 200, q);
+    }
+    const j = await (await post(url, '/api/evaluate', { mode: 'mock', scenario: 'legit-lookup', vertical: { toString: 1 } })).json();
+    assert.equal(j.call.tool, 'invoices.lookup', 'the default vertical (finance) is used');
+    for (const mode of [{ toString: 1 }, ['mock'], 1]) assert.equal((await post(url, '/api/evaluate', { mode, scenario: 'legit-lookup' })).status, 400);
+    for (const scenario of [{ toString: 1 }, ['legit-lookup'], '__proto__']) assert.equal((await post(url, '/api/evaluate', { mode: 'mock', scenario })).status, 400);
+  });
+});

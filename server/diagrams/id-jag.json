@@ -2,7 +2,7 @@
   "schema": "diagram-studio/1",
   "id": "id-jag",
   "title": "ID-JAG: a user's identity at an app whose IdP you do not control",
-  "lede": "The exchange returns an identity assertion grant that the gateway redeems at the application's own issuer. No shared credential, no consent prompt. Ping release claim, UNVERIFIED on our tenant. Simulated.",
+  "lede": "The exchange returns an identity assertion grant that the gateway redeems at the application's own issuer. The deck claims no shared credential and no re-consent. Ping release claim, UNVERIFIED on our tenant. Simulated.",
   "groups": {
     "actor": {
       "label": "Actors",
@@ -27,35 +27,35 @@
       "label": "Agent",
       "group": "actor",
       "x": 0,
-      "y": 220
+      "y": 300
     },
     {
       "id": "gw",
       "label": "P1 Privilege Agent App",
       "group": "gateway",
-      "x": 300,
-      "y": 220
+      "x": 380,
+      "y": 300
     },
     {
       "id": "idp",
       "label": "User's IdP (mock)",
       "group": "idp",
-      "x": 300,
-      "y": 0
+      "x": 380,
+      "y": -20
     },
     {
       "id": "pissuer",
       "label": "Partner app's own issuer (mock)",
       "group": "idp",
-      "x": 640,
-      "y": 0
+      "x": 920,
+      "y": -20
     },
     {
       "id": "papi",
       "label": "Partner app API (mock)",
       "group": "resource",
-      "x": 640,
-      "y": 220
+      "x": 920,
+      "y": 460
     }
   ],
   "edges": [
@@ -105,42 +105,42 @@
       ]
     },
     {
-      "title": "The gateway asks for a grant",
+      "title": "Gateway asks for a grant",
       "what": "RFC 8693 exchange with a requested token type of an identity assertion grant.",
       "edges": [
         1
       ]
     },
     {
-      "title": "The IdP issues the grant",
+      "title": "IdP issues the grant",
       "what": "A short-lived JWT naming the user and the partner issuer as its audience.",
       "edges": [
         2
       ]
     },
     {
-      "title": "The gateway redeems it at the app's issuer",
-      "what": "The grant is presented to the issuer the app trusts. No password, no secret of the user IdP.",
+      "title": "Redeem at the app's issuer",
+      "what": "The grant is presented to the issuer the app trusts. The lab sends no client credential on this leg (it omits client authentication).",
       "edges": [
         3
       ]
     },
     {
-      "title": "The partner issuer verifies the grant",
-      "what": "It trusts that IdP, set up in advance by an administrator, and checks signature, audience, expiry and that the grant was not used before.",
+      "title": "Issuer verifies the grant",
+      "what": "In this lab it trusts that IdP (set up in advance, the lab's model) and checks signature, audience, expiry and that the grant was not used before: the lab's rules, not the deck's list.",
       "edges": [
         4
       ]
     },
     {
-      "title": "The partner issuer mints its own token",
-      "what": "The user's identity is now expressed in a token from the app's own issuer. No consent screen.",
+      "title": "Partner issuer mints a token",
+      "what": "The user's identity is now expressed in a token from the app's own issuer. The lab models no consent step (the deck claims no re-consent).",
       "edges": [
         5
       ]
     },
     {
-      "title": "The gateway calls the app",
+      "title": "Gateway calls the app",
       "what": "The app validates its own issuer's token as usual.",
       "edges": [
         6

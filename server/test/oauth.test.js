@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { MOCK_SIGNATURE, decodeJwt, signJwt, verifyJwt } from '../src/jwt.js';
+import { MAX_TOKEN, MOCK_SIGNATURE, decodeJwt, signJwt, verifyJwt } from '../src/jwt.js';
 import { getKeys, jwksOf } from '../src/keys.js';
 import { IDJAG_SCENARIOS, OBO_SCENARIOS, ID_JAG_TYPE, TOKEN_EXCHANGE, oboConfig, runIdJag, runObo } from '../src/oauth.js';
 import { DEFAULT_CAST, VERTICALS } from '../src/cast.js';
@@ -99,8 +99,13 @@ test('LIVE ID-JAG: two issuers, the grant is for the partner issuer, the partner
   assert.equal(r.exchangeRequest.requested_token_type, ID_JAG_TYPE);
   assert.match(r.redeemRequest.grant_type, /jwt-bearer/);
   assert.equal(r.redeemRequest.assertion, r.grant.token);
-  assert.deepEqual([r.proof.consentPrompts, r.proof.sharedSecrets], [0, 0]);
-  assert.ok(!/client_secret|password/i.test(JSON.stringify([r.exchangeRequest, r.redeemRequest])), 'no secret crosses the boundary');
+  // These two figures describe what the MOCK models (no consent step, no client authentication), not the product.
+  assert.deepEqual([r.proof.consentStepsModelled, r.proof.clientCredentialsModelled], [0, 0]);
+  assert.match(r.proof.notShown, /omits client authentication on the redeem leg/);
+  assert.match(r.proof.deckClaim, /no re-consent/);
+  assert.ok(!/no consent prompt/i.test(JSON.stringify(r)), 'the deck says no re-consent, not no consent prompt');
+  assert.ok(r.proof.holds.some((h) => /Redeem leg carries ClientID, ClientSecret, AuthMethod and PrivateKeyPEM/.test(h.holds)), 'the schema\'s client credential is acknowledged');
+  assert.ok(!/client_secret|password/i.test(JSON.stringify([r.exchangeRequest, r.redeemRequest])), 'the mock sends no client secret');
   assert.ok(r.accepted && r.api.ok);
 });
 
@@ -141,4 +146,31 @@ test('unknown scenarios give null, and tokens are .example hosts only', () => {
   assert.equal(runIdJag({ cast: DEFAULT_CAST, scenario: 'nope', mode: 'mock', table: MOCK_TABLE }), null);
   const r = JSON.stringify([runObo({ cast: DEFAULT_CAST, scenario: 'ok', mode: 'live' }), runIdJag({ cast: DEFAULT_CAST, scenario: 'ok', mode: 'live' })]);
   for (const m of r.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)) assert.match(m[1], /\.example$/, m[1]);
+});
+
+test('an oversize token is refused before parsing even when its signature is perfectly valid (MAX_TOKEN)', () => {
+  const big = signJwt({ ...claims, pad: 'x'.repeat(MAX_TOKEN) }, { key: K.userIdp });
+  assert.ok(big.length > MAX_TOKEN);
+  assert.equal(decodeJwt(big), null);
+  const r = verifyJwt(big, rules);
+  assert.deepEqual([r.ok, failed(r)], [false, ['format']]);
+  // the same claims without the padding verify: it is the size, nothing else
+  assert.equal(verifyJwt(signJwt(claims, { key: K.userIdp }), rules).ok, true);
+  const edge = signJwt({ ...claims, pad: 'x'.repeat(5400) }, { key: K.userIdp });
+  assert.ok(edge.length <= MAX_TOKEN, `edge token is ${edge.length}`);
+  assert.equal(verifyJwt(edge, rules).ok, true, 'a token just under the limit is accepted');
+});
+
+test('expiry boundary: exp equal to now is expired, one second later is valid', () => {
+  const sign = (exp) => signJwt({ ...claims, exp }, { key: K.userIdp });
+  assert.deepEqual(failed(verifyJwt(sign(NOW), rules)), ['expiry']);
+  assert.deepEqual(failed(verifyJwt(sign(NOW + 1), rules)), []);
+  assert.deepEqual(failed(verifyJwt(sign('9999999999'), rules)), ['expiry'], 'a text exp is not a number');
+});
+
+test('act must be an object with a text sub: an empty act, a numeric sub, an array and null are all refused', () => {
+  const sign = (act) => signJwt({ ...claims, act }, { key: K.userIdp });
+  const need = { ...rules, requireAct: true };
+  for (const act of [{}, { sub: 5 }, { sub: null }, [], null, 'agent', { iss: 'x' }]) assert.deepEqual(failed(verifyJwt(sign(act), need)), ['act'], JSON.stringify(act));
+  assert.deepEqual(failed(verifyJwt(sign({ sub: 'agent' }), need)), []);
 });

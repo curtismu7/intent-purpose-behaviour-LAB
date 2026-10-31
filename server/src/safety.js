@@ -80,12 +80,11 @@ export function sameOriginWrites(req, res, next) {
   const origin = req.headers.origin;
   if (origin) {
     let ok = false;
-    // Behind the SE ingress the Host header is rewritten to loopback (the app only accepts loopback names), so the page's
-    // own public host, set by the deploy as IPBLAB_PUBLIC_HOST, is the other same-origin value. Nothing else is.
-    const publicHost = String(process.env.IPBLAB_PUBLIC_HOST || '').toLowerCase();
+    // The app serves plain http on loopback, so the page's own origin is http://<Host>. A different scheme (https) or any other
+    // host or port is cross-origin, even when the host part happens to match.
     try {
-      const host = new URL(origin).host.toLowerCase();
-      ok = host === String(req.headers.host || '').toLowerCase() || (publicHost !== '' && host === publicHost);
+      const u = new URL(origin);
+      ok = u.protocol === 'http:' && u.host.toLowerCase() === String(req.headers.host || '').toLowerCase();
     } catch { /* malformed */ }
     if (!ok) return res.status(403).json({ error: 'cross_origin', message: 'writes must be same-origin' });
   }

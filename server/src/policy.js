@@ -42,6 +42,7 @@ export function validatePolicy(input) {
       if (spec === 'bool') { if (typeof v !== 'boolean') throw new InputError('bad_policy', `${sec}.${k} must be true or false`); }
       else {
         const [lo, hi, kind] = spec;
+        if (kind === 'int' && v === 0) throw new InputError('bad_policy', `${sec}.${k} must be a whole number from ${lo} to ${hi}: the schema's 0 (built-in default) is not supported by the lab`);
         if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi || (kind === 'int' && !Number.isInteger(v))) throw new InputError('bad_policy', `${sec}.${k} must be ${kind === 'int' ? 'a whole number' : 'a number'} from ${lo} to ${hi}`);
       }
       out[sec][k] = v;

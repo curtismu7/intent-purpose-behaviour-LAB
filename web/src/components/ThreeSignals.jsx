@@ -145,7 +145,7 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
             <label htmlFor="c-lim">limit argument (a number of records)</label><input id="c-lim" inputMode="numeric" value={custom.limit} onChange={(e) => setCustom({ ...custom, limit: e.target.value })} />
             <button type="submit" data-testid="custom-run">Judge this call</button>
             {customResult && !customResult.ok && <p className="field-error" role="alert">{customResult.message}</p>}
-            <p className="muted">Judged as the lab&apos;s main agent with its usual history. The text is only counted and displayed; nothing is evaluated or fetched.</p>
+            <p className="muted">Judged as the lab&apos;s main agent with its usual history. Its purpose profile requires a record argument that starts with {story.cast.castPrefix}-, so a call without one is refused. The text is only counted and displayed; nothing is evaluated or fetched.</p>
           </form>
         )}
       </section>

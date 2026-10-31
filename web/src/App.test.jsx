@@ -36,7 +36,9 @@ describe("shell", () => {
     await tab("Three signals");
     await userEvent.keyboard("p");
     expect(screen.getByTestId("presenter-say")).toBeInTheDocument();
-    expect(screen.getByTestId("banner")).toHaveTextContent(/SIMULATED/);
+    expect(screen.getByTestId("banner")).toBeVisible();
+    expect(screen.getByTestId("banner")).toHaveTextContent(/SIMULATED.*UNVERIFIED on our tenant/);
+    expect(screen.getByTestId("presenter-say")).toBeVisible();
     expect(screen.getByTestId("presenter")).toHaveTextContent("Exit presenter");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByTestId("presenter-say")).toBeNull();
@@ -93,7 +95,9 @@ describe("three signals", () => {
   it("policy fields are tagged: console swagger names versus lab-invented", async () => {
     await mount();
     const pol = screen.getByTestId("policy");
-    expect(within(pol).getAllByText("console swagger name").length).toBe(4);
+    expect(within(pol).getAllByText("console swagger name").length).toBe(3);
+    expect(within(pol).getAllByText("swagger name, lab reading").length).toBe(1);
+    expect(screen.getByTestId("policy-ranges")).toHaveTextContent(/0 .*built-in default; the lab does not support 0/);
     expect(within(pol).getAllByText("lab-invented").length).toBeGreaterThan(5);
   }, 30000);
 
@@ -123,6 +127,8 @@ describe("baseline", () => {
     await mount();
     await tab("Baseline");
     expect(await screen.findByTestId("baseline-empty", {}, T)).toBeInTheDocument();
+    // the scripted rows load from the server after the empty state shows; the button is disabled until they arrive
+    await waitFor(() => expect(screen.getByTestId("next-call")).toBeEnabled(), T);
     expect(screen.getByTestId("enforcement")).toHaveTextContent("OFF");
     expect(screen.getByTestId("never-blocked")).toHaveTextContent(/never blocked for being new/);
     await userEvent.click(screen.getByTestId("next-call"));
@@ -133,6 +139,25 @@ describe("baseline", () => {
     expect(screen.getByTestId("row-14")).toHaveTextContent("alert");
     expect(screen.getByTestId("row-16")).toHaveTextContent("deny");
     expect(screen.getByTestId("row-4")).toHaveTextContent("ALLOW-LEARNING");
+  }, 60000);
+
+  it("Mock: editing MinObservations and EnforceObservations in the policy moves the timeline and the scripted rows", async () => {
+    await mount();
+    const enf = screen.getByLabelText(/EnforceObservations/);
+    await userEvent.clear(enf); await userEvent.type(enf, "4");
+    const min = screen.getByLabelText(/MinObservations/);
+    await userEvent.clear(min); await userEvent.type(min, "2");
+    await waitFor(() => expect(screen.queryByTestId("policy-error")).toBeNull(), T);
+    await tab("Baseline");
+    await waitFor(() => expect(screen.getByTestId("next-call")).toBeEnabled(), T);
+    expect(screen.getByText(/learning \(under 2\)/)).toBeInTheDocument();
+    expect(screen.getByText(/scoring \(2 to 3\)/)).toBeInTheDocument();
+    expect(screen.getByText(/enforcing \(4\+\)/)).toBeInTheDocument();
+    for (let i = 1; i <= 5; i++) await userEvent.click(screen.getByTestId("next-call"));
+    expect(screen.getByTestId("row-1")).toHaveTextContent("learning");
+    expect(screen.getByTestId("row-3")).toHaveTextContent("scoring");
+    expect(screen.getByTestId("row-5")).toHaveTextContent("enforcing");
+    expect(screen.getByTestId("enforcement")).toHaveTextContent("ON");
   }, 60000);
 
   it("Live: fire real calls at a real learner; a held call is not learned", async () => {
@@ -186,6 +211,10 @@ describe("on-behalf-of and ID-JAG", () => {
     await waitFor(() => expect(screen.getByTestId("flow-verdict")).toHaveTextContent("ACCEPTED"), T);
     expect(screen.getByTestId("consent-count")).toHaveTextContent("0");
     expect(screen.getByTestId("secret-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("proof")).toHaveTextContent(/describe the mock, not the product, and are not proof/);
+    expect(screen.getByTestId("proof")).toHaveTextContent(/omits client authentication on the redeem leg/);
+    expect(screen.getByTestId("deck-claim")).toHaveTextContent(/no re-consent/);
+    expect(screen.getByText(/NOT EXERCISED/, { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/id-jag-standalone-LAB/)).toBeInTheDocument();
     await userEvent.click(screen.getByTestId("case-replay"));
     const again = await screen.findByTestId("checks-redeem-again", {}, T);
@@ -224,7 +253,7 @@ describe("reset and talk track", () => {
   it("the talk track tab lists every section", async () => {
     await mount();
     await tab("Talk track");
-    expect(await screen.findByTestId("talk-track")).toHaveTextContent(/Hard refusals are deterministic/);
+    expect(await screen.findByTestId("talk-track", {}, T)).toHaveTextContent(/Hard refusals are deterministic/);
     expect(screen.getByTestId("talk-track").querySelectorAll("li").length).toBeGreaterThanOrEqual(9);
   }, 30000);
 });

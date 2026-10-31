@@ -64,22 +64,12 @@ test('sameOriginWrites: GET passes, cross-origin and cross-site writes refused',
   assert.ok(run(sameOriginWrites, { method: 'POST', headers: { ...h, 'sec-fetch-site': 'same-origin' } }).next);
 });
 
-test('behind the ingress (Host rewritten to loopback) only the configured public host counts as same-origin', () => {
-  const loopback = { host: '127.0.0.1:7100' };
-  const post = (origin) => run(sameOriginWrites, { method: 'POST', headers: { ...loopback, origin } });
-  const saved = process.env.IPBLAB_PUBLIC_HOST;
-  try {
-    delete process.env.IPBLAB_PUBLIC_HOST;
-    assert.equal(post('https://app.demo.example').status, 403, 'without the setting, a public origin is refused');
-    process.env.IPBLAB_PUBLIC_HOST = 'app.demo.example';
-    assert.ok(post('https://app.demo.example').next, 'the public host is accepted');
-    assert.ok(post('https://APP.demo.example').next, 'case-insensitive');
-    assert.equal(post('https://evil.example').status, 403, 'any other origin is still refused');
-    assert.equal(post('https://app.demo.example.evil.example').status, 403, 'a look-alike host is refused');
-    assert.equal(post('not a url').status, 403, 'a malformed origin is refused');
-  } finally {
-    if (saved === undefined) delete process.env.IPBLAB_PUBLIC_HOST; else process.env.IPBLAB_PUBLIC_HOST = saved;
-  }
+test('same-origin compares the scheme as well as the host: https from the same host and port is cross-origin', () => {
+  const h = { host: '127.0.0.1:7100' };
+  const post = (origin) => run(sameOriginWrites, { method: 'POST', headers: { ...h, origin } });
+  assert.ok(post('http://127.0.0.1:7100').next);
+  assert.ok(post('HTTP://127.0.0.1:7100').next, 'case-insensitive scheme and host');
+  for (const bad of ['https://127.0.0.1:7100', 'ws://127.0.0.1:7100', 'http://127.0.0.1:7101', 'http://localhost:7100', 'http://127.0.0.1:7100.evil.example', 'not a url', 'null', 'file://127.0.0.1:7100']) assert.equal(post(bad).status, 403, bad);
 });
 
 test('review fixes: octets above 255 are not loopback; 4840 is reserved; control and bidi characters are stripped', async () => {

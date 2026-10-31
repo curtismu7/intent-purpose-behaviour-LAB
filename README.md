@@ -18,8 +18,8 @@ What it shows:
 
 1. **Three signals.** Intent (what is the call trying to do), purpose (was this agent key ever issued for it) and behaviour (does this agent normally do this) are asked of every call, deliberately not one score. Only the deterministic tier (pattern matches, purpose findings) can refuse; the scored signals (similarity, anomaly) alert or ask a person, and the editable policy rejects any attempt to make a score deny. Eight calls across three vertical packs (finance, health, retail).
 2. **Baseline.** An agent builds its normal. Enforcement is OFF until the baseline is established ("a new agent is never blocked for being new"), then an out-of-pattern call asks a person or raises an alert, never a silent block.
-3. **On-behalf-of.** A local RFC 8693 token exchange: the caller's token is swapped for one minted for the MCP server (`aud`, an `act` claim) and the backend verifies signature, issuer, audience, expiry and `act`. Failure cases included.
-4. **ID-JAG.** Two issuers: the user's IdP issues an identity assertion grant, the gateway redeems it at the partner app's own issuer. No shared credential, no consent prompt. (The standalone walkthrough is the sibling `id-jag-standalone-LAB`; this lab does not import from it.)
+3. **On-behalf-of.** A local RFC 8693 token exchange: the caller's token is swapped for one minted for the MCP server (`aud`, an `act` claim) and the backend validates it. The deck says the backend validates a token issued to it and that `act` preserves the original caller; the specific checks the lab's backend runs (signature, issuer, audience, expiry, `act`) and the 300 second lifetime are the lab's own rules. Failure cases included.
+4. **ID-JAG.** Two issuers: the user's IdP issues an identity assertion grant, the gateway redeems it at the partner app's own issuer. The deck claims no shared credential and no re-consent; the lab models neither a consent step nor client authentication on the redeem leg, so it cannot demonstrate that claim, and its panel says what the mock does rather than proving it. (The standalone walkthrough is the sibling `id-jag-standalone-LAB`; this lab does not import from it.)
 5. **Diagram.** ReactFlow, drawn from diagram-studio/1 data loaded by name: movable boxes, Simulate, speed, Reset (restores box positions).
 6. **Talk track.** Also in `docs/talk-track.md`.
 
@@ -75,7 +75,7 @@ npm run doctor   # 16 checks; PORT=7109 npm run doctor to use a spare port
 npm run reset    # clears the default workspace's runs and live baseline (the UI Reset also restores the policy and the diagram)
 ```
 
-`GET /api/health` returns `demo-health/1`. The workspace id comes in `X-Workspace`; every hop carries a W3C `traceparent`. Presenter mode: press `P` (Esc leaves); the simulation banner stays. `npm run mock-table`, `npm run talk-track` and `npm run content-pack` regenerate the generated files. See `docs/safety.md`.
+`GET /api/health` returns `demo-health/1`. The workspace id comes in `X-Workspace`; every hop carries a W3C `traceparent`. Presenter mode: press `P` (Esc leaves); the simulation banner stays. `npm run mock-table`, `npm run talk-track` and `npm run content-pack` regenerate the generated files. The shared standalone drift and CSS checks (`check-drift.sh`, `check-css.sh`) are run by hand before a release; CI does not run them. See `docs/safety.md`.
 
 ## Docker (optional)
 

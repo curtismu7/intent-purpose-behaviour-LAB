@@ -5,8 +5,10 @@ import { visible } from "../safeText";
 export function ClaimTag({ label }) {
   return <span className="tag" data-state="warn" data-testid="claim-tag">{label || "Ping release claim, UNVERIFIED on our tenant"}</span>;
 }
-export function SourceTag({ swagger, source, labSource }) {
-  return <span className="tag" data-state={swagger ? "ok" : undefined} title={swagger ? source : labSource}>{swagger ? "console swagger name" : "lab-invented"}</span>;
+export function SourceTag({ swagger, nameOnly, source, labSource }) {
+  // nameOnly: the schema gives the field a name and a type but no behaviour, so only the name is from the swagger.
+  const text = swagger ? (nameOnly ? "swagger name, lab reading" : "console swagger name") : "lab-invented";
+  return <span className="tag" data-state={swagger && !nameOnly ? "ok" : undefined} title={swagger ? source : labSource}>{text}</span>;
 }
 
 // Effect words (allow, alert, ask, deny) and check results map to a state for the tag colour.

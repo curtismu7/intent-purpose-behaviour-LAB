@@ -63,6 +63,10 @@
       {
        "axis": "Methods",
        "detail": "invoices.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with INV-"
       }
      ]
     },
@@ -123,6 +127,10 @@
       {
        "axis": "Targets",
        "detail": "target \"payees\" is not a declared Target"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with INV-"
       }
      ]
     },
@@ -406,6 +414,10 @@
       {
        "axis": "Methods",
        "detail": "claims.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with CLM-"
       }
      ]
     },
@@ -466,6 +478,10 @@
       {
        "axis": "Targets",
        "detail": "target \"providers\" is not a declared Target"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with CLM-"
       }
      ]
     },
@@ -749,6 +765,10 @@
       {
        "axis": "Methods",
        "detail": "orders.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with ORD-"
       }
      ]
     },
@@ -809,6 +829,10 @@
       {
        "axis": "Targets",
        "detail": "target \"refunds\" is not a declared Target"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with ORD-"
       }
      ]
     },
@@ -1600,6 +1624,10 @@
       {
        "axis": "Methods",
        "detail": "invoices.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with INV-"
       }
      ]
     },
@@ -2193,6 +2221,10 @@
       {
        "axis": "Methods",
        "detail": "claims.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with CLM-"
       }
      ]
     },
@@ -2786,6 +2818,10 @@
       {
        "axis": "Methods",
        "detail": "orders.export is not one of the declared Methods"
+      },
+      {
+       "axis": "ArgPrefixes.record",
+       "detail": "record is missing; the declared ArgPrefixes require it to start with ORD-"
       }
      ]
     },

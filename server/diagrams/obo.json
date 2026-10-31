@@ -27,28 +27,28 @@
       "label": "Agent",
       "group": "actor",
       "x": 0,
-      "y": 200
+      "y": 300
     },
     {
       "id": "gw",
       "label": "P1 Privilege Agent App",
       "group": "gateway",
-      "x": 320,
-      "y": 200
+      "x": 340,
+      "y": 300
     },
     {
       "id": "idp",
       "label": "Identity provider (token endpoint, mock)",
       "group": "idp",
-      "x": 320,
-      "y": 0
+      "x": 820,
+      "y": -60
     },
     {
       "id": "mcp",
       "label": "MCP server (downstream)",
       "group": "resource",
-      "x": 640,
-      "y": 200
+      "x": 820,
+      "y": 300
     }
   ],
   "edges": [
@@ -88,29 +88,29 @@
       ]
     },
     {
-      "title": "The gateway exchanges the token",
+      "title": "Gateway exchanges the token",
       "what": "Subject token in, a token for the downstream MCP server out. The issuer checks the subject token.",
       "edges": [
         1
       ]
     },
     {
-      "title": "A token minted for the MCP server",
-      "what": "aud is the MCP server, the lifetime is short, and the act claim names the original caller.",
+      "title": "Token for the MCP server",
+      "what": "aud is the MCP server and the act claim names the original caller (the deck's claims). The lab mints it for 300 seconds: a lab choice.",
       "edges": [
         2
       ]
     },
     {
       "title": "The gateway calls the MCP server",
-      "what": "The backend receives a token issued to it, not a shared service-account token.",
+      "what": "The backend receives a token issued to it, not a shared service-account token (the deck's claim).",
       "edges": [
         3
       ]
     },
     {
-      "title": "The backend verifies it itself",
-      "what": "Signature, issuer, audience, expiry and act are checked by the backend. In Live mode this is real.",
+      "title": "Backend verifies it",
+      "what": "In this lab the backend checks signature, issuer, audience, expiry and act: the lab's rules, not the deck's list. In Live mode the checking is real.",
       "edges": [
         4
       ]

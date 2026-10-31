@@ -40,50 +40,50 @@
       "id": "intent",
       "label": "Intent: what is it trying to do?",
       "group": "signal",
-      "x": 680,
+      "x": 700,
       "y": 260
     },
     {
       "id": "purpose",
       "label": "Purpose: was it ever in scope?",
       "group": "signal",
-      "x": 680,
-      "y": 0
+      "x": 700,
+      "y": -20
     },
     {
       "id": "behaviour",
       "label": "Behaviour: does this agent do this?",
       "group": "signal",
-      "x": 680,
-      "y": 520
+      "x": 700,
+      "y": 540
     },
     {
       "id": "hard",
       "label": "Deterministic tier (may refuse)",
       "group": "gateway",
-      "x": 1130,
-      "y": 80
+      "x": 1180,
+      "y": -60
     },
     {
       "id": "scored",
       "label": "Scored tier (alert or ask)",
       "group": "gateway",
-      "x": 1130,
-      "y": 460
+      "x": 1180,
+      "y": 540
     },
     {
       "id": "person",
       "label": "Person (approval)",
       "group": "actor",
-      "x": 1500,
-      "y": 460
+      "x": 1640,
+      "y": 540
     },
     {
       "id": "mcp",
       "label": "MCP server",
       "group": "resource",
       "x": 330,
-      "y": 620
+      "y": 660
     }
   ],
   "edges": [
@@ -145,77 +145,77 @@
   ],
   "steps": [
     {
-      "title": "The agent sends a call",
+      "title": "Agent sends a call",
       "what": "A tool call arrives with the agent key and its arguments.",
       "edges": [
         0
       ]
     },
     {
-      "title": "Intent is asked",
+      "title": "Ask intent",
       "what": "The request is classified by what it is trying to do, not only by what it literally says.",
       "edges": [
         1
       ]
     },
     {
-      "title": "Purpose is asked",
+      "title": "Ask purpose",
       "what": "The key's declared purpose is compared with the call: tool, record count, data class, or no declaration at all.",
       "edges": [
         2
       ]
     },
     {
-      "title": "Behaviour is asked",
+      "title": "Ask behaviour",
       "what": "The call is scored against this agent's learned pattern. Not enforced until a baseline is established.",
       "edges": [
         3
       ]
     },
     {
-      "title": "A pattern match is a hard finding",
+      "title": "Pattern match",
       "what": "A deterministic pattern, such as a bulk export or a payee change, goes to the tier that may refuse.",
       "edges": [
         4
       ]
     },
     {
-      "title": "A purpose finding is a hard finding",
+      "title": "Purpose finding",
       "what": "Outside the declaration, breaking one axis of it, or a key with no purpose.",
       "edges": [
         5
       ]
     },
     {
-      "title": "Similarity is a scored signal",
+      "title": "Similarity score",
       "what": "How close the text is to a risky intent. It can alert or ask. It cannot deny.",
       "edges": [
         6
       ]
     },
     {
-      "title": "Anomaly is a scored signal",
+      "title": "Anomaly score",
       "what": "How far the call departs from the baseline. It can alert or ask. It cannot deny.",
       "edges": [
         7
       ]
     },
     {
-      "title": "Hard findings can deny",
+      "title": "Hard finding: deny",
       "what": "Only this tier produces a refusal, with a reason code.",
       "edges": [
         8
       ]
     },
     {
-      "title": "Scored findings ask a person",
+      "title": "Scored: ask a person",
       "what": "Above the ask threshold the call is held for approval. Above the alert threshold it goes through and an alert is raised.",
       "edges": [
         9
       ]
     },
     {
-      "title": "Allowed calls reach the MCP server",
+      "title": "Allowed: forward",
       "what": "If nothing refused and nobody is being asked, the call is forwarded.",
       "edges": [
         10

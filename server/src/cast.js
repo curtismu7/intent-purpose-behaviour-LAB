@@ -46,7 +46,7 @@ export function fillDeep(value, cast) {
   return outRoot.v;
 }
 
-export const verticalFrom = (id) => (Object.hasOwn(VERTICALS, id) ? id : DEFAULT_VERTICAL);
+export const verticalFrom = (id) => (typeof id === 'string' && Object.hasOwn(VERTICALS, id) ? id : DEFAULT_VERTICAL);
 
 // Only brand, agentId and host, as short plain strings; anything else in the file is ignored.
 export function loadCast(file, vertical = DEFAULT_VERTICAL) {

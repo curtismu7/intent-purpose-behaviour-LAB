@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getJson, postJson } from "../api";
 import { visible } from "../safeText";
 import { ClaimTag, ConsoleConfig, STATE } from "./Bits";
@@ -38,7 +38,7 @@ function Timeline({ calls, policy }) {
       <div className="phases" role="img" aria-label={`phase ${phase}`}>
         {PHASES.map((p) => <span key={p} className="phase" data-now={p === phase ? "true" : "false"}>{p}{p === "learning" ? ` (under ${min})` : p === "scoring" ? ` (${min} to ${enf - 1})` : ` (${enf}+)`}</span>)}
       </div>
-      {phase !== "enforcing" && <p className="never" data-testid="never-blocked">A new agent is never blocked for being new: until {enf} calls the behaviour signal cannot alert, ask or deny. (Ping release claim, UNVERIFIED on our tenant.)</p>}
+      {phase !== "enforcing" && <p className="never" data-testid="never-blocked">The deck claims enforcement begins only once the baseline is established, so a new agent is never blocked for being new (Ping release claim, UNVERIFIED on our tenant). Lab-invented extension: in this lab that means behaviour cannot alert, ask or deny until {enf} calls.</p>}
     </div>
   );
 }
@@ -50,18 +50,23 @@ export default function Baseline({ story, mode, policy, resetSignal }) {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // A stale answer (an older policy, vertical or reset) must never overwrite a newer one: each request checks it is still the latest.
+  const mockSeq = useRef(0); const liveSeq = useRef(0);
   useEffect(() => {
+    const mine = ++mockSeq.current;
     setShown(0); setMock(null);
-    postJson("/api/baseline", { mode: "mock", vertical: story.vertical, policy }).then(({ ok, body }) => { if (ok) setMock(body.rows); });
+    postJson("/api/baseline", { mode: "mock", vertical: story.vertical, policy }).then(({ ok, body }) => { if (ok && mine === mockSeq.current) setMock(body.rows); });
   }, [story.vertical, policy, resetSignal]);
   useEffect(() => {
-    getJson(`/api/baseline?mode=live&vertical=${encodeURIComponent(story.vertical)}`).then((j) => setLive({ log: j.live.log, state: j.live.state }), () => setError("could not load"));
+    const mine = ++liveSeq.current;
+    getJson(`/api/baseline?mode=live&vertical=${encodeURIComponent(story.vertical)}`).then((j) => { if (mine === liveSeq.current) setLive({ log: j.live.log, state: j.live.state }); }, () => { if (mine === liveSeq.current) setError("could not load"); });
   }, [story.vertical, resetSignal]);
 
   const fire = async (kind) => {
     setBusy(true);
     const { ok, body } = await postJson("/api/baseline", { mode: "live", kind, vertical: story.vertical, policy });
     setBusy(false);
+    liveSeq.current += 1; // a load that was still in flight is now older than this answer
     if (ok) { setLive({ log: body.log, state: body.state }); setError(null); } else setError(body.detail || body.error || "request failed");
   };
 
@@ -72,7 +77,7 @@ export default function Baseline({ story, mode, policy, resetSignal }) {
     <div className="baseline-tab">
       <div className="panel">
         <h2>Baseline: an agent builds its own normal <ClaimTag label={story.claimLabel} /></h2>
-        <p className="intro">The gateway learns each agent&apos;s normal pattern of calls and scores how far a request departs from it. It scores only after MinObservations calls and enforces only after EnforceObservations. Calls that were refused or held are not learned. Edit those numbers in the policy on the Three signals tab (current: {policy.behaviour.MinObservations} and {policy.behaviour.EnforceObservations}).</p>
+        <p className="intro">The gateway learns each agent&apos;s normal pattern of calls and scores how far a request departs from it. The deck says enforcement begins once the baseline is established; the console schema names MinObservations (the baseline learns this many calls before it scores) and EnforceObservations (before it enforces). Lab-invented: what the scoring phase does (scored and shown, never acted on), and the rule that calls that were refused or held are not learned. Edit those numbers in the policy on the Three signals tab (current: {policy.behaviour.MinObservations} and {policy.behaviour.EnforceObservations}).</p>
         <Timeline calls={calls} policy={policy} />
         {mode === "mock" ? (
           <div className="seg" role="group" aria-label="Scripted run">

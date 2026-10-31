@@ -16,19 +16,19 @@ export const JWT_BEARER = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
 export const ID_JAG_TYP = 'oauth-id-jag+jwt';
 
 export const OBO_SCENARIOS = [
-  { id: 'ok', title: 'A valid exchange', expect: 'accepted', lesson: 'The gateway verifies the caller\'s token, swaps it for one minted for the MCP server, and the backend accepts it: right signature, right issuer, aud is itself, not expired, and an act claim names the original caller.' },
+  { id: 'ok', title: 'A valid exchange', expect: 'accepted', lesson: 'The gateway verifies the caller\'s token, swaps it for one minted for the MCP server, and the backend accepts it. The deck says the backend validates a token issued to it and that act preserves the original caller. The specific checks shown here (signature, issuer, audience, expiry, act) are this lab\'s rules for a verifying backend, not the deck\'s list.' },
   { id: 'wrong-audience', title: 'Minted for a different server', expect: 'rejected', lesson: 'The exchanged token is valid, but its aud names another server. The backend validates a token issued to it, so it refuses one issued to someone else. This is what stops a token being replayed against a different backend.' },
-  { id: 'expired', title: 'An expired token', expect: 'rejected', lesson: 'The exchanged token expired a minute ago. Short lifetimes are the point of minting per backend; the backend checks exp itself.' },
+  { id: 'expired', title: 'An expired token', expect: 'rejected', lesson: 'The exchanged token expired a minute ago. In this lab the exchanged token lives 300 seconds and the backend checks exp itself: both are lab choices, not the deck\'s.' },
   { id: 'no-act', title: 'No act claim', expect: 'rejected', lesson: 'The token is for this server and in date, but nothing says who the original caller was. This backend requires the act claim (its own rule, invented for the lab) so it cannot be called anonymously through the gateway.' },
-  { id: 'bad-signature', title: 'Signed by a key nobody trusts', expect: 'rejected', lesson: 'The header claims the right key id, but the signature was made with a different key. The backend verifies the signature against the issuer\'s published keys and refuses it.' },
+  { id: 'bad-signature', title: 'Signed by a key nobody trusts', expect: 'rejected', lesson: 'The header claims the right key id, but the signature was made with a different key. In this lab the backend verifies the signature against the issuer\'s published keys and refuses it (a lab rule, not the deck\'s).' },
   { id: 'shared-service-account', title: 'What the exchange replaces: a shared service account', expect: 'accepted-anonymous', lesson: 'Before: the gateway presents its own service-account token to every backend. The backend accepts it, but all it can see is the service account. Nobody can tell whose request this was, and the same token works against any backend that trusts the account.' },
 ];
 export const IDJAG_SCENARIOS = [
-  { id: 'ok', title: 'A valid redemption', expect: 'accepted', lesson: 'The user\'s IdP issues an identity assertion grant for the partner app\'s issuer. The gateway redeems it there, the partner issuer verifies it against the user IdP\'s published keys and mints its own access token. No shared secret, no consent prompt.' },
-  { id: 'wrong-audience', title: 'A grant meant for a different issuer', expect: 'rejected', lesson: 'The grant\'s aud is not this issuer. A grant is only good at the one issuer it was minted for.' },
+  { id: 'ok', title: 'A valid redemption', expect: 'accepted', lesson: 'The user\'s IdP issues an identity assertion grant for the partner app\'s issuer. The gateway redeems it there, the partner issuer verifies it against the user IdP\'s published keys and mints its own access token. The deck claims no shared credential and no re-consent. This lab models neither a consent step nor client authentication on the redeem leg, so it cannot demonstrate that claim; the panel below says exactly what the mock does.' },
+  { id: 'wrong-audience', title: 'A grant meant for a different issuer', expect: 'rejected', lesson: 'The grant\'s aud is not this issuer. A grant is only good at the one issuer it was minted for (the lab\'s audience check).' },
   { id: 'untrusted-issuer', title: 'A grant from an IdP the partner does not trust', expect: 'rejected', lesson: 'The partner issuer trusts specific IdPs, set up in advance by an administrator. A grant from any other issuer, or signed by an unknown key, is refused.' },
-  { id: 'expired', title: 'An expired grant', expect: 'rejected', lesson: 'Grants are short-lived. An expired one is refused at redemption.' },
-  { id: 'replay', title: 'The same grant redeemed twice', expect: 'second-rejected', lesson: 'The first redemption works. Redeeming the same grant again is refused because its jti was already used.' },
+  { id: 'expired', title: 'An expired grant', expect: 'rejected', lesson: 'In this lab a grant lives 300 seconds and an expired one is refused at redemption (lab choices).' },
+  { id: 'replay', title: 'The same grant redeemed twice', expect: 'second-rejected', lesson: 'The first redemption works. Redeeming the same grant again is refused because its jti was already used (the lab\'s replay rule; the deck does not say how replay is handled).' },
 ];
 
 export const hostsFor = (cast) => ({
@@ -45,6 +45,7 @@ export const hostsFor = (cast) => ({
 // The OBO config: field names {TokenURL, ClientID, AuthMethod, Resource, Scope, SubjectTokenType, RequestedTokenType, Redeem} are from the
 // Privilege console swagger (2026-10-31, schema only; behaviour not tested on our tenant). Resource (RFC 8707) is the exchanged token's aud.
 // Redeem is the ID-JAG second leg. ClientSecret and PrivateKeyPEM exist in the schema and are write-only: the lab holds none.
+// AuthMethod is shown for shape only: the lab runs no client authentication on either leg (it is not exercised).
 export function oboConfig(cast, kind = 'obo') {
   const h = hostsFor(cast);
   const base = { TokenURL: `${h.idp}/as/token`, ClientID: 'gateway-exchange-client', AuthMethod: 'client_secret_basic', SubjectTokenType: ACCESS_TOKEN_TYPE };
@@ -177,13 +178,16 @@ export function runIdJag({ cast, scenario, mode, now, table, traceparent }) {
     original: view(original), config: cfg, exchangeRequest: exchangeReq, grant: view(grant), redeemRequest: redeemReq, redeem: first, redeemAgain: second,
     access: access ? view(access) : null, api, accepted: !!(first.ok && api?.ok),
     proof: {
-      consentPrompts: 0, sharedSecrets: 0,
+      // What THIS LAB's mock does. These two numbers are properties of the mock (it has no consent step and no client authentication to count),
+      // not measurements of the product and not proof of the deck's claim.
+      consentStepsModelled: 0, clientCredentialsModelled: 0,
+      deckClaim: 'The deck says the end user\'s identity reaches the third-party app with no shared credential and no re-consent. Ping release claim, UNVERIFIED on our tenant.',
       holds: [
-        { party: 'User IdP', holds: 'its own signing key (private); no key or secret of the partner app' },
-        { party: 'Partner app issuer', holds: 'the user IdP\'s public keys and a trust entry for that IdP; no secret of the user IdP, and no copy of the user\'s password' },
-        { party: 'Gateway', holds: 'the caller\'s token and a short-lived grant; no credential that works at the partner app on its own' },
+        { party: 'User IdP', holds: 'its own signing key (private); the lab gives it no key or secret of the partner app' },
+        { party: 'Partner app issuer', holds: 'the user IdP\'s public keys and a trust entry for that IdP (the lab\'s model of an administrator\'s set-up); no secret of the user IdP' },
+        { party: 'Gateway', holds: 'in this lab: the caller\'s token and a short-lived grant, and no client credential. In the console schema the Redeem leg carries ClientID, ClientSecret, AuthMethod and PrivateKeyPEM, so a real gateway would hold a client credential for the partner issuer. The lab leaves client authentication out entirely.' },
       ],
-      notShown: 'Redeem.ClientID and Redeem.AuthMethod name how the gateway identifies itself to the partner issuer. The lab does not authenticate the client at all (ClientSecret and PrivateKeyPEM are write-only in the schema and the lab holds none), and how the release behaves is UNVERIFIED.',
+      notShown: 'The lab omits client authentication on the redeem leg: Redeem.ClientID is sent as a plain field and Redeem.AuthMethod is not exercised. How the release authenticates the gateway, and whether any consent step exists, is UNVERIFIED.',
     },
     jwks: live ? { userIdp: userJwks, appIssuer: appJwks } : null, traceId: H.trace.traceId, hops: H.hops,
   };

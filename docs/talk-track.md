@@ -30,11 +30,11 @@ The gateway learns what normal looks like for each agent. A new agent has no bas
 
 ## On-behalf-of
 
-The gateway swaps the caller's verified token for one minted for the downstream MCP server, using RFC 8693. The backend checks a token issued to it, not a shared service account, and the act claim says who the original caller was. In Live mode this is real signing and real verification on your machine; the tokens are mock-issued and shown raw.
+The gateway swaps the caller's verified token for one minted for the downstream MCP server, using RFC 8693. The backend checks a token issued to it, not a shared service account, and the act claim says who the original caller was. The particular checks the lab's backend runs, and the 300 second lifetime, are the lab's own rules, not the deck's. In Live mode this is real signing and real verification on your machine; the tokens are mock-issued and shown raw.
 
 ## ID-JAG
 
-When the target app trusts a different identity provider, the exchange returns an identity assertion grant and the gateway redeems it at that app's own issuer. The user's identity arrives at an app whose IdP you do not control, with no shared credential and no consent prompt. For the standalone ID-JAG walkthrough, see the sibling id-jag-standalone-LAB; this lab does not import from it.
+When the target app trusts a different identity provider, the exchange returns an identity assertion grant and the gateway redeems it at that app's own issuer. The user's identity arrives at an app whose IdP you do not control, with no shared credential and no re-consent (the deck's claim, UNVERIFIED on our tenant; the lab models neither a consent step nor client authentication, so it cannot show it). For the standalone ID-JAG walkthrough, see the sibling id-jag-standalone-LAB; this lab does not import from it.
 
 ## Why it matters
 

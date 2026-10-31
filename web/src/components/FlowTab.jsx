@@ -24,6 +24,7 @@ function Result({ kind, r }) {
           <Json value={form(r.exchangeRequest)} label="exchange request" testId="exchange-request" />
           <Token title="3. The exchanged token (minted for the MCP server)" tok={r.exchanged} label="aud is the MCP server; the act claim names the original caller" testId="tok-exchanged" />
           <Checks checks={r.backend.checks} caption="4. The MCP server verifies it for itself" testId="checks-backend" />
+          <p className="muted" data-testid="lab-rules-note">The deck says only that the backend validates a token issued to it and that act preserves the original caller. Which checks run (signature, issuer, audience, expiry, act) and the 300 second lifetime are this lab&apos;s rules.</p>
           <p className="attrib" data-testid="attribution"><b>What the backend can attribute:</b> {visible(r.attribution.text)}</p>
         </>
       ) : (
@@ -34,19 +35,21 @@ function Result({ kind, r }) {
           <h3>4. Redeemed at the partner app&apos;s own issuer (jwt-bearer)</h3>
           <Json value={form(r.redeemRequest)} label="redeem request" testId="redeem-request" />
           <Checks checks={r.redeem.checks} caption="The partner issuer verifies the grant" testId="checks-redeem" />
+          <p className="muted" data-testid="lab-rules-note">These checks (signature, issuer, audience, expiry, replay) are this lab&apos;s rules for a redeeming issuer, not the deck&apos;s list.</p>
           {r.redeemAgain && <Checks checks={r.redeemAgain.checks} caption="The same grant, redeemed a second time" testId="checks-redeem-again" />}
           {r.access && <Token title="5. The partner issuer's own access token" tok={r.access} label="signed by the partner issuer's key, not the user IdP's" testId="tok-access" />}
           {r.api && <Checks checks={r.api.checks} caption="The partner API verifies its own issuer's token" testId="checks-api" />}
           <section className="panel proof" data-testid="proof">
-            <h3>No shared credential, no re-consent</h3>
-            <p>Consent prompts shown to the user: <b data-testid="consent-count">{r.proof.consentPrompts}</b>. Shared secrets between the two sides: <b data-testid="secret-count">{r.proof.sharedSecrets}</b>.</p>
+            <h3>What this lab&apos;s mock does about credentials and consent</h3>
+            <p data-testid="deck-claim">{r.proof.deckClaim}</p>
+            <p>These two figures describe the <b>mock</b>, not the product, and are not proof of the claim. Consent steps the lab models: <b data-testid="consent-count">{r.proof.consentStepsModelled}</b> (it has no consent step at all). Client credentials the lab models: <b data-testid="secret-count">{r.proof.clientCredentialsModelled}</b> (it omits client authentication on the redeem leg).</p>
             <ul className="plain">{r.proof.holds.map((h) => <li key={h.party}><b>{h.party}</b> holds {h.holds}.</li>)}</ul>
             <p className="muted">{r.proof.notShown}</p>
           </section>
         </>
       )}
       {r.jwks && <details><summary>Public key set(s) the verifier used (JWKS, public keys only)</summary><Json value={r.jwks} label="jwks" /></details>}
-      <ConsoleConfig title="OBO config (the exchange and its Redeem leg)" value={r.config} source="Field names from the console swagger, 2026-10-31 (schema only; behaviour not tested on our tenant). Resource (RFC 8707) is the exchanged token's aud. Redeem is the ID-JAG second leg. ClientSecret and PrivateKeyPEM exist in the schema and are write-only; the lab holds none." />
+      <ConsoleConfig title="OBO config (the exchange and its Redeem leg)" value={r.config} source="Field names from the console swagger, 2026-10-31 (schema only; behaviour not tested on our tenant). Resource (RFC 8707) is the exchanged token's aud. Redeem is the ID-JAG second leg. AuthMethod is shown for shape only: the lab runs no client authentication on either leg, so it is NOT EXERCISED. ClientSecret and PrivateKeyPEM exist in the schema and are write-only; the lab holds none." />
       <Hops hops={r.hops} traceId={r.traceId} />
     </div>
   );

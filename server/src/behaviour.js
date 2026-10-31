@@ -14,12 +14,8 @@ export const POINTS = { newTool: 35, newTarget: 30, newShape: 20, volume: 25 };
 
 export const createLearner = () => ({ calls: 0, tools: new Map(), targets: new Set(), shapes: new Set(), maxRecords: 1 });
 
-export function phaseOf(learner, policy) {
-  const b = policy.behaviour;
-  if (b.Disabled) return 'disabled';
-  if (learner.calls < b.MinObservations) return 'learning';
-  return learner.calls < b.EnforceObservations ? 'scoring' : 'enforcing';
-}
+// One definition of the phases (withPhase, below) serves the learner, the scorer and the stored Mock rows.
+export const phaseOf = (learner, policy) => withPhase({ callsSeen: learner.calls, raw: 0, components: [] }, policy).phase;
 export const isEstablished = (learner, policy) => phaseOf(learner, policy) === 'enforcing';
 
 export function observe(learner, call, policy) {
@@ -49,7 +45,8 @@ export function withPhase(row, policy) {
   const b = policy.behaviour;
   const phase = b.Disabled ? 'disabled' : row.callsSeen < b.MinObservations ? 'learning' : row.callsSeen < b.EnforceObservations ? 'scoring' : 'enforcing';
   const scored = phase === 'scoring' || phase === 'enforcing';
-  return { ...row, phase, score: scored ? row.raw : 0, established: phase === 'enforcing', enforced: phase === 'enforcing', minObservations: b.MinObservations, enforceObservations: b.EnforceObservations };
+  // A disabled key reports no components, in Mock (re-read from a table row) exactly as in Live.
+  return { ...row, components: phase === 'disabled' ? [] : row.components, phase, score: scored ? row.raw : 0, established: phase === 'enforcing', enforced: phase === 'enforcing', minObservations: b.MinObservations, enforceObservations: b.EnforceObservations };
 }
 
 export function describeLearner(learner) {

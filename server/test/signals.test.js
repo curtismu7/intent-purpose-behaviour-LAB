@@ -58,7 +58,14 @@ test('purpose: none, outside, axis and in-scope', () => {
   assert.equal(axis.status, 'axis');
   assert.equal(axis.violations[0].axis, 'ArgPrefixes.record');
   assert.equal(evaluatePurpose(call('invoices.lookup', { record: 'INV-9' }), decl).status, 'in-scope');
-  assert.equal(evaluatePurpose(call('invoices.lookup', { limit: 5000 }), decl).status, 'in-scope', 'record counts are not a purpose axis; the intent pattern handles those');
+  assert.equal(evaluatePurpose(call('invoices.lookup', { record: 'INV-1', limit: 5000 }), decl).status, 'in-scope', 'record counts are not a purpose axis; the intent pattern handles those');
+  // a constrained argument that is missing or not text is a violation, not a free pass
+  for (const [label, args] of [['number', { record: 5 }], ['boolean', { record: true }], ['missing', {}], ['missing, others present', { limit: 3 }], ['empty text', { record: '' }]]) {
+    const r = evaluatePurpose(call('invoices.lookup', args), decl);
+    assert.deepEqual([label, r.status, r.violations[0]?.axis], [label, 'axis', 'ArgPrefixes.record']);
+  }
+  assert.match(evaluatePurpose(call('invoices.lookup', { record: 5 }), decl).violations[0].detail, /number, not text/);
+  assert.match(evaluatePurpose(call('invoices.lookup'), decl).violations[0].detail, /missing/);
   assert.equal(evaluatePurpose(call('invoices.lookup'), { ...decl, Targets: ['ledgers'] }).violations[0].axis, 'Targets');
 });
 
@@ -81,6 +88,10 @@ test('behaviour phases: learning, scoring, enforcing, and disabled reads 0 and l
   assert.equal(phases.indexOf('scoring'), policy.behaviour.MinObservations);
   assert.equal(phases.indexOf('enforcing'), policy.behaviour.EnforceObservations);
   assert.equal(isEstablished(l, policy), true);
+  const tuned = validatePolicy({ behaviour: { MinObservations: 2, EnforceObservations: 4 } });
+  const fresh = createLearner(); const seen = [];
+  for (let i = 0; i < 6; i++) { seen.push(phaseOf(fresh, tuned)[0]); observe(fresh, call('a.b', { record: `R-${i}` }), tuned); }
+  assert.equal(seen.join(''), 'llssee', 'phaseOf follows the edited Min and Enforce');
   const off = validatePolicy({ behaviour: { Disabled: true } });
   const odd = scoreBehaviour(l, call('zz.zz', { record: 'Q' }), off);
   assert.deepEqual([odd.phase, odd.score, odd.components.length], ['disabled', 0, 0]);
@@ -95,7 +106,7 @@ test('policy: defaults validate, unknown fields and bad numbers are refused', ()
   assert.deepEqual(validatePolicy(undefined), DEFAULT_POLICY);
   assert.deepEqual(validatePolicy({}), DEFAULT_POLICY);
   assert.equal(validatePolicy({ behaviour: { askAbove: 90 } }).behaviour.askAbove, 90);
-  for (const bad of [[], 'x', { nope: 1 }, { intent: { nope: 1 } }, { intent: { alertAbove: 2 } }, { intent: { alertAbove: 0.9, askAbove: 0.2 } }, { behaviour: { MinObservations: 0 } }, { behaviour: { MinObservations: 1.5 } }, { behaviour: { MinObservations: 20, EnforceObservations: 10 } }, { behaviour: { Disabled: 'no' } }, { intent: { Floor: 2 } }, { purpose: { refuseNone: 'yes' } }, { behaviour: { alertAbove: 80, askAbove: 10 } }, { intent: null }, { behaviour: { alertAbove: NaN } }]) {
+  for (const bad of [[], 'x', { nope: 1 }, { intent: { nope: 1 } }, { intent: { alertAbove: 2 } }, { intent: { alertAbove: 0.9, askAbove: 0.2 } }, { behaviour: { MinObservations: 0 } }, { behaviour: { EnforceObservations: 0 } }, { behaviour: { MinObservations: 1.5 } }, { behaviour: { MinObservations: 20, EnforceObservations: 10 } }, { behaviour: { Disabled: 'no' } }, { intent: { Floor: 2 } }, { purpose: { refuseNone: 'yes' } }, { behaviour: { alertAbove: 80, askAbove: 10 } }, { intent: null }, { behaviour: { alertAbove: NaN } }]) {
     assert.throws(() => validatePolicy(bad), InputError, JSON.stringify(bad));
   }
 });
@@ -147,4 +158,8 @@ test('engine: the live engine refuses a bulk export even from a long-established
   const r = evaluateLive(call('invoices.export', { limit: 5000, format: 'csv' }, 'export all invoices'), ctx);
   assert.equal(r.decision, 'deny');
   assert.match(r.reasonCode, /^DENY-INTENT-PATTERN/);
+});
+
+test('policy: 0 for MinObservations or EnforceObservations (the schema\'s built-in default) is refused with a clear reason, not silently accepted', () => {
+  for (const f of ['MinObservations', 'EnforceObservations']) assert.throws(() => validatePolicy({ behaviour: { [f]: 0 } }), (e) => e.code === 'bad_policy' && /built-in default.*not supported/.test(e.message), f);
 });
