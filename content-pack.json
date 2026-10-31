@@ -1,0 +1,373 @@
+{
+  "schema": "demo-content-pack/1",
+  "id": "intent-purpose-behaviour-lab",
+  "title": "Intent, Purpose and Behaviour Lab",
+  "version": "0.1.0",
+  "demo": {
+    "id": "intent-purpose-behaviour-lab",
+    "name": "Intent, Purpose and Behaviour Lab",
+    "catalog": "D0",
+    "baseUrl": "http://localhost:7100",
+    "doctor": "/api/health",
+    "tags": [
+      "mcp",
+      "agent",
+      "policy",
+      "privilege",
+      "on-behalf-of",
+      "id-jag",
+      "simulated"
+    ]
+  },
+  "glossary": [
+    {
+      "id": "three-signals",
+      "term": "Three signals, not one score",
+      "definition": "Intent (what is being attempted), purpose (was it ever in scope) and behaviour (does this agent do this) are asked of every call and kept separate, so a policy can say which one fired. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "intent purpose behaviour"
+      ]
+    },
+    {
+      "id": "intent",
+      "term": "Intent",
+      "definition": "Classifies what a request is actually trying to do (exfiltrate data, change a payee, look up one record) rather than what it literally says, combining deterministic patterns with semantic similarity. In this lab the similarity is a word-overlap stand-in. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "AIIntent"
+      ]
+    },
+    {
+      "id": "purpose",
+      "term": "Purpose",
+      "definition": "Each agent key declares what it exists to do. Policy can refuse calls outside the declaration, calls that break one axis of it, or calls from a key that declares nothing. Field names (PurposeProfile: Statement, Methods, Targets, Apps, ArgPrefixes) are from the console swagger of 2026-10-31, schema only. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "PurposeProfile"
+      ]
+    },
+    {
+      "id": "behaviour",
+      "term": "Behaviour",
+      "definition": "The gateway learns each agent's normal pattern of calls and scores how far a request departs from it. Scoring starts after MinObservations and enforcing after EnforceObservations (console swagger names, schema only). Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "BehaviourConfig",
+        "anomaly"
+      ]
+    },
+    {
+      "id": "baseline",
+      "term": "Baseline",
+      "definition": "What an agent normally does. Enforcement starts only once it is established, so a new agent is never blocked for being new. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "MinObservations",
+        "EnforceObservations"
+      ]
+    },
+    {
+      "id": "deterministic-tier",
+      "term": "Deterministic tier",
+      "definition": "Pattern matches and purpose findings. The only tier that can hard-refuse. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "hard refusal"
+      ]
+    },
+    {
+      "id": "scored-tier",
+      "term": "Scored tier",
+      "definition": "The similarity score and the behaviour anomaly. They drive alerts and human-in-the-loop approval and never silently become the enforcement decision. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": []
+    },
+    {
+      "id": "human-in-the-loop",
+      "term": "Ask a person (human in the loop)",
+      "definition": "The call is held for a person to approve. It is neither blocked nor silently allowed.",
+      "aliases": [
+        "HITL",
+        "approval"
+      ]
+    },
+    {
+      "id": "on-behalf-of",
+      "term": "On-behalf-of",
+      "definition": "The gateway swaps the caller's verified token (RFC 8693) for one minted for the downstream MCP server, so the backend validates a token issued to it. The act claim preserves who the original caller was. In Live mode the lab signs and verifies real RS256 tokens locally. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "OBO",
+        "token exchange",
+        "RFC 8693"
+      ]
+    },
+    {
+      "id": "id-jag",
+      "term": "ID-JAG (identity assertion grant)",
+      "definition": "Where the target application trusts a different identity provider, the exchange returns an identity assertion grant that the gateway redeems at that application's own issuer. No shared credential and no re-consent. Ping release claim, UNVERIFIED on our tenant.",
+      "aliases": [
+        "assertion grant",
+        "Redeem"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "deck-slide-48",
+      "title": "Ping ID4AI Workforce H2 2026 deck, slide 48: Intent, Purpose and Behaviour",
+      "url": "https://example.invalid/ping-id4ai-workforce-h2-2026-deck",
+      "kind": "deck",
+      "use": "The three signals and the on-behalf-of and ID-JAG release claims.",
+      "status": "read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "console-swagger",
+      "title": "Privilege console swagger, 2026-10-31 (schema only)",
+      "url": "https://example.invalid/privilege-console-swagger",
+      "kind": "schema",
+      "use": "Field names for AIIntent, PurposeProfile, BehaviourConfig and OBO. It proves names exist, not behaviour.",
+      "status": "read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc8693",
+      "title": "RFC 8693: OAuth 2.0 Token Exchange",
+      "url": "https://www.rfc-editor.org/rfc/rfc8693",
+      "kind": "standard",
+      "use": "The exchange request and the act claim.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc8707",
+      "title": "RFC 8707: Resource Indicators for OAuth 2.0",
+      "url": "https://www.rfc-editor.org/rfc/rfc8707",
+      "kind": "standard",
+      "use": "The resource parameter that becomes the exchanged token audience.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    }
+  ],
+  "cards": [
+    {
+      "id": "try-legit-lookup",
+      "label": "Call 1: A legitimate lookup",
+      "description": "In scope, an ordinary pattern for this agent, and nothing in the request looks like exfiltration or a payee change. All three signals are quiet and the call goes through.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-legit-lookup"
+      },
+      "terms": [
+        "three-signals"
+      ],
+      "story": "S01"
+    },
+    {
+      "id": "try-bulk-export",
+      "label": "Call 2: A bulk export",
+      "description": "The deterministic intent pattern matches a bulk export, and the call is also outside the declared purpose. Both are hard-refusal tiers: the refusal does not depend on any score.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-bulk-export"
+      },
+      "terms": [
+        "intent",
+        "deterministic-tier"
+      ],
+      "story": "S02"
+    },
+    {
+      "id": "try-payee-change",
+      "label": "Call 3: A payee change (the literal tool)",
+      "description": "The tool name itself says it changes where money goes. A deterministic pattern refuses it, and it is not part of the declared purpose either.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-payee-change"
+      },
+      "terms": [
+        "intent",
+        "deterministic-tier"
+      ],
+      "story": "S03"
+    },
+    {
+      "id": "try-reworded-payee",
+      "label": "Call 4: A payee change that avoids the obvious tool",
+      "description": "An in-scope tool, a usual argument shape, no pattern match. But what the text asks for is close to \"change a payee\". The similarity score is high, so the call is held for a person. It is not denied: a score never denies.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-reworded-payee"
+      },
+      "terms": [
+        "intent",
+        "scored-tier",
+        "human-in-the-loop"
+      ],
+      "story": "S04"
+    },
+    {
+      "id": "try-outside-purpose",
+      "label": "Call 5: A harmless call outside the declared purpose",
+      "description": "Intent is a single-record lookup, which is benign. But this key was issued for invoice reconciliation, and this tool is outside that. Purpose turns the declaration into something enforceable.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-outside-purpose"
+      },
+      "terms": [
+        "purpose",
+        "deterministic-tier"
+      ],
+      "story": "S05"
+    },
+    {
+      "id": "try-no-purpose",
+      "label": "Call 6: A key that declares no purpose",
+      "description": "The same harmless call, from a key that was never given a purpose. Policy can refuse any call from such a key; here it does. Turn that switch off in the policy and it becomes an alert.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-no-purpose"
+      },
+      "terms": [
+        "purpose",
+        "deterministic-tier"
+      ],
+      "story": "S06"
+    },
+    {
+      "id": "try-drift-alert",
+      "label": "Call 7: In scope, but unlike this agent",
+      "description": "Allowed by purpose and not a risky intent, but the target was never touched and the argument shape was never used. Behaviour scores the departure and raises an alert; the call goes through.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-drift-alert"
+      },
+      "terms": [
+        "behaviour",
+        "scored-tier"
+      ],
+      "story": "S07"
+    },
+    {
+      "id": "try-new-agent",
+      "label": "Call 8: A new agent is never blocked for being new",
+      "description": "This agent has made three calls, fewer than MinObservations, so nothing is scored yet. The departure would have been high, and the call is allowed anyway, with the reason code ALLOW-LEARNING.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-new-agent"
+      },
+      "terms": [
+        "behaviour",
+        "baseline"
+      ],
+      "story": "S08"
+    },
+    {
+      "id": "try-baseline",
+      "label": "Baseline: an agent builds its normal",
+      "description": "Enforcement is off until the baseline is established; then an out-of-pattern call asks a person.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#baseline"
+      },
+      "terms": [
+        "baseline",
+        "behaviour"
+      ]
+    },
+    {
+      "id": "try-obo",
+      "label": "On-behalf-of: a token for the MCP server",
+      "description": "Real local RFC 8693 exchange in Live mode, with failure cases.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#obo"
+      },
+      "terms": [
+        "on-behalf-of"
+      ]
+    },
+    {
+      "id": "try-idjag",
+      "label": "ID-JAG: two issuers, no shared credential",
+      "description": "The user IdP issues a grant, the partner issuer redeems it.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#idjag"
+      },
+      "terms": [
+        "id-jag"
+      ]
+    },
+    {
+      "id": "concept-diagram",
+      "label": "Diagrams",
+      "description": "Three diagrams: the signals, on-behalf-of and ID-JAG.",
+      "group": "concept",
+      "action": {
+        "type": "route",
+        "href": "/#diagram"
+      },
+      "terms": [
+        "three-signals"
+      ]
+    },
+    {
+      "id": "ref-doctor",
+      "label": "Doctor and health",
+      "description": "Preflight checks and the demo-health/1 endpoint.",
+      "group": "setup",
+      "action": {
+        "type": "route",
+        "href": "/api/health"
+      }
+    }
+  ],
+  "stories": [
+    {
+      "id": "S01",
+      "title": "A legitimate lookup",
+      "say": "In scope, an ordinary pattern for this agent, and nothing in the request looks like exfiltration or a payee change. All three signals are quiet and the call goes through."
+    },
+    {
+      "id": "S02",
+      "title": "A bulk export",
+      "say": "The deterministic intent pattern matches a bulk export, and the call is also outside the declared purpose. Both are hard-refusal tiers: the refusal does not depend on any score."
+    },
+    {
+      "id": "S03",
+      "title": "A payee change (the literal tool)",
+      "say": "The tool name itself says it changes where money goes. A deterministic pattern refuses it, and it is not part of the declared purpose either."
+    },
+    {
+      "id": "S04",
+      "title": "A payee change that avoids the obvious tool",
+      "say": "An in-scope tool, a usual argument shape, no pattern match. But what the text asks for is close to \"change a payee\". The similarity score is high, so the call is held for a person. It is not denied: a score never denies."
+    },
+    {
+      "id": "S05",
+      "title": "A harmless call outside the declared purpose",
+      "say": "Intent is a single-record lookup, which is benign. But this key was issued for invoice reconciliation, and this tool is outside that. Purpose turns the declaration into something enforceable."
+    },
+    {
+      "id": "S06",
+      "title": "A key that declares no purpose",
+      "say": "The same harmless call, from a key that was never given a purpose. Policy can refuse any call from such a key; here it does. Turn that switch off in the policy and it becomes an alert."
+    },
+    {
+      "id": "S07",
+      "title": "In scope, but unlike this agent",
+      "say": "Allowed by purpose and not a risky intent, but the target was never touched and the argument shape was never used. Behaviour scores the departure and raises an alert; the call goes through."
+    },
+    {
+      "id": "S08",
+      "title": "A new agent is never blocked for being new",
+      "say": "This agent has made three calls, fewer than MinObservations, so nothing is scored yet. The departure would have been high, and the call is allowed anyway, with the reason code ALLOW-LEARNING."
+    }
+  ]
+}
