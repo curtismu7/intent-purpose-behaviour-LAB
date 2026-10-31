@@ -1,0 +1,119 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "obo",
+  "title": "On-behalf-of: a token minted for the MCP server",
+  "lede": "The gateway swaps the caller's verified token (RFC 8693) for one minted for the downstream server, so the backend validates a token issued to it. The act claim says who the original caller was. Ping release claim, UNVERIFIED on our tenant. Simulated.",
+  "groups": {
+    "actor": {
+      "label": "Actors",
+      "color": "dark"
+    },
+    "idp": {
+      "label": "Identity providers (mock)",
+      "color": "blue"
+    },
+    "gateway": {
+      "label": "P1 Privilege Agent App",
+      "color": "red"
+    },
+    "resource": {
+      "label": "Resources",
+      "color": "grey"
+    }
+  },
+  "nodes": [
+    {
+      "id": "agent",
+      "label": "Agent",
+      "group": "actor",
+      "x": 0,
+      "y": 200
+    },
+    {
+      "id": "gw",
+      "label": "P1 Privilege Agent App",
+      "group": "gateway",
+      "x": 320,
+      "y": 200
+    },
+    {
+      "id": "idp",
+      "label": "Identity provider (token endpoint, mock)",
+      "group": "idp",
+      "x": 320,
+      "y": 0
+    },
+    {
+      "id": "mcp",
+      "label": "MCP server (downstream)",
+      "group": "resource",
+      "x": 640,
+      "y": 200
+    }
+  ],
+  "edges": [
+    {
+      "source": "agent",
+      "target": "gw",
+      "label": "call with the caller's token"
+    },
+    {
+      "source": "gw",
+      "target": "idp",
+      "label": "RFC 8693 exchange, audience = MCP server"
+    },
+    {
+      "source": "idp",
+      "target": "gw",
+      "label": "new token, act = original caller"
+    },
+    {
+      "source": "gw",
+      "target": "mcp",
+      "label": "call with the exchanged token"
+    },
+    {
+      "source": "mcp",
+      "target": "idp",
+      "label": "verify with published keys",
+      "dashed": true
+    }
+  ],
+  "steps": [
+    {
+      "title": "The agent calls the gateway",
+      "what": "The call carries a token issued to the caller, aud = the gateway.",
+      "edges": [
+        0
+      ]
+    },
+    {
+      "title": "The gateway exchanges the token",
+      "what": "Subject token in, a token for the downstream MCP server out. The issuer checks the subject token.",
+      "edges": [
+        1
+      ]
+    },
+    {
+      "title": "A token minted for the MCP server",
+      "what": "aud is the MCP server, the lifetime is short, and the act claim names the original caller.",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "The gateway calls the MCP server",
+      "what": "The backend receives a token issued to it, not a shared service-account token.",
+      "edges": [
+        3
+      ]
+    },
+    {
+      "title": "The backend verifies it itself",
+      "what": "Signature, issuer, audience, expiry and act are checked by the backend. In Live mode this is real.",
+      "edges": [
+        4
+      ]
+    }
+  ]
+}

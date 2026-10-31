@@ -1,0 +1,225 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "three-signals",
+  "title": "Three signals, one decision: intent, purpose, behaviour",
+  "lede": "Every call is asked three separate questions. Only the deterministic tier can refuse; the scored signals alert or ask a person. Ping release claim, UNVERIFIED on our tenant. Simulated.",
+  "groups": {
+    "actor": {
+      "label": "Actors",
+      "color": "dark"
+    },
+    "gateway": {
+      "label": "P1 Privilege Agent App",
+      "color": "red"
+    },
+    "signal": {
+      "label": "Signals",
+      "color": "amber"
+    },
+    "resource": {
+      "label": "Resources",
+      "color": "grey"
+    }
+  },
+  "nodes": [
+    {
+      "id": "agent",
+      "label": "Agent",
+      "group": "actor",
+      "x": 0,
+      "y": 220
+    },
+    {
+      "id": "gw",
+      "label": "P1 Privilege Agent App",
+      "group": "gateway",
+      "x": 260,
+      "y": 220
+    },
+    {
+      "id": "intent",
+      "label": "Intent: what is it trying to do?",
+      "group": "signal",
+      "x": 560,
+      "y": 0
+    },
+    {
+      "id": "purpose",
+      "label": "Purpose: was it ever in scope?",
+      "group": "signal",
+      "x": 560,
+      "y": 220
+    },
+    {
+      "id": "behaviour",
+      "label": "Behaviour: does this agent do this?",
+      "group": "signal",
+      "x": 560,
+      "y": 440
+    },
+    {
+      "id": "hard",
+      "label": "Deterministic tier (may refuse)",
+      "group": "gateway",
+      "x": 880,
+      "y": 90
+    },
+    {
+      "id": "scored",
+      "label": "Scored tier (alert or ask)",
+      "group": "gateway",
+      "x": 880,
+      "y": 380
+    },
+    {
+      "id": "person",
+      "label": "Person (approval)",
+      "group": "actor",
+      "x": 1180,
+      "y": 380
+    },
+    {
+      "id": "mcp",
+      "label": "MCP server",
+      "group": "resource",
+      "x": 260,
+      "y": 500
+    }
+  ],
+  "edges": [
+    {
+      "source": "agent",
+      "target": "gw",
+      "label": "call"
+    },
+    {
+      "source": "gw",
+      "target": "intent",
+      "label": "what is it for?"
+    },
+    {
+      "source": "gw",
+      "target": "purpose",
+      "label": "was it issued for this?"
+    },
+    {
+      "source": "gw",
+      "target": "behaviour",
+      "label": "is this usual?"
+    },
+    {
+      "source": "intent",
+      "target": "hard",
+      "label": "pattern match"
+    },
+    {
+      "source": "purpose",
+      "target": "hard",
+      "label": "outside, axis, or no purpose"
+    },
+    {
+      "source": "intent",
+      "target": "scored",
+      "label": "similarity score"
+    },
+    {
+      "source": "behaviour",
+      "target": "scored",
+      "label": "anomaly score"
+    },
+    {
+      "source": "hard",
+      "target": "gw",
+      "label": "deny"
+    },
+    {
+      "source": "scored",
+      "target": "person",
+      "label": "ask a person"
+    },
+    {
+      "source": "gw",
+      "target": "mcp",
+      "label": "allow (maybe with an alert)"
+    }
+  ],
+  "steps": [
+    {
+      "title": "The agent sends a call",
+      "what": "A tool call arrives with the agent key and its arguments.",
+      "edges": [
+        0
+      ]
+    },
+    {
+      "title": "Intent is asked",
+      "what": "The request is classified by what it is trying to do, not only by what it literally says.",
+      "edges": [
+        1
+      ]
+    },
+    {
+      "title": "Purpose is asked",
+      "what": "The key's declared purpose is compared with the call: tool, record count, data class, or no declaration at all.",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "Behaviour is asked",
+      "what": "The call is scored against this agent's learned pattern. Not enforced until a baseline is established.",
+      "edges": [
+        3
+      ]
+    },
+    {
+      "title": "A pattern match is a hard finding",
+      "what": "A deterministic pattern, such as a bulk export or a payee change, goes to the tier that may refuse.",
+      "edges": [
+        4
+      ]
+    },
+    {
+      "title": "A purpose finding is a hard finding",
+      "what": "Outside the declaration, breaking one axis of it, or a key with no purpose.",
+      "edges": [
+        5
+      ]
+    },
+    {
+      "title": "Similarity is a scored signal",
+      "what": "How close the text is to a risky intent. It can alert or ask. It cannot deny.",
+      "edges": [
+        6
+      ]
+    },
+    {
+      "title": "Anomaly is a scored signal",
+      "what": "How far the call departs from the baseline. It can alert or ask. It cannot deny.",
+      "edges": [
+        7
+      ]
+    },
+    {
+      "title": "Hard findings can deny",
+      "what": "Only this tier produces a refusal, with a reason code.",
+      "edges": [
+        8
+      ]
+    },
+    {
+      "title": "Scored findings ask a person",
+      "what": "Above the ask threshold the call is held for approval. Above the alert threshold it goes through and an alert is raised.",
+      "edges": [
+        9
+      ]
+    },
+    {
+      "title": "Allowed calls reach the MCP server",
+      "what": "If nothing refused and nobody is being asked, the call is forwarded.",
+      "edges": [
+        10
+      ]
+    }
+  ]
+}

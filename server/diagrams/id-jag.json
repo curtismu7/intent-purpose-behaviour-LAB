@@ -1,0 +1,150 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "id-jag",
+  "title": "ID-JAG: a user's identity at an app whose IdP you do not control",
+  "lede": "The exchange returns an identity assertion grant that the gateway redeems at the application's own issuer. No shared credential, no consent prompt. Ping release claim, UNVERIFIED on our tenant. Simulated.",
+  "groups": {
+    "actor": {
+      "label": "Actors",
+      "color": "dark"
+    },
+    "idp": {
+      "label": "Identity providers (mock)",
+      "color": "blue"
+    },
+    "gateway": {
+      "label": "P1 Privilege Agent App",
+      "color": "red"
+    },
+    "resource": {
+      "label": "Resources",
+      "color": "grey"
+    }
+  },
+  "nodes": [
+    {
+      "id": "agent",
+      "label": "Agent",
+      "group": "actor",
+      "x": 0,
+      "y": 220
+    },
+    {
+      "id": "gw",
+      "label": "P1 Privilege Agent App",
+      "group": "gateway",
+      "x": 300,
+      "y": 220
+    },
+    {
+      "id": "idp",
+      "label": "User's IdP (mock)",
+      "group": "idp",
+      "x": 300,
+      "y": 0
+    },
+    {
+      "id": "pissuer",
+      "label": "Partner app's own issuer (mock)",
+      "group": "idp",
+      "x": 640,
+      "y": 0
+    },
+    {
+      "id": "papi",
+      "label": "Partner app API (mock)",
+      "group": "resource",
+      "x": 640,
+      "y": 220
+    }
+  ],
+  "edges": [
+    {
+      "source": "agent",
+      "target": "gw",
+      "label": "call with the caller's token"
+    },
+    {
+      "source": "gw",
+      "target": "idp",
+      "label": "exchange for an ID-JAG, aud = partner issuer"
+    },
+    {
+      "source": "idp",
+      "target": "gw",
+      "label": "identity assertion grant"
+    },
+    {
+      "source": "gw",
+      "target": "pissuer",
+      "label": "redeem the grant"
+    },
+    {
+      "source": "pissuer",
+      "target": "idp",
+      "label": "verify with its public keys",
+      "dashed": true
+    },
+    {
+      "source": "pissuer",
+      "target": "gw",
+      "label": "partner access token"
+    },
+    {
+      "source": "gw",
+      "target": "papi",
+      "label": "call with the partner token"
+    }
+  ],
+  "steps": [
+    {
+      "title": "The agent calls the gateway",
+      "what": "The call carries the caller's token, from the IdP the gateway trusts.",
+      "edges": [
+        0
+      ]
+    },
+    {
+      "title": "The gateway asks for a grant",
+      "what": "RFC 8693 exchange with a requested token type of an identity assertion grant.",
+      "edges": [
+        1
+      ]
+    },
+    {
+      "title": "The IdP issues the grant",
+      "what": "A short-lived JWT naming the user and the partner issuer as its audience.",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "The gateway redeems it at the app's issuer",
+      "what": "The grant is presented to the issuer the app trusts. No password, no secret of the user IdP.",
+      "edges": [
+        3
+      ]
+    },
+    {
+      "title": "The partner issuer verifies the grant",
+      "what": "It trusts that IdP, set up in advance by an administrator, and checks signature, audience, expiry and that the grant was not used before.",
+      "edges": [
+        4
+      ]
+    },
+    {
+      "title": "The partner issuer mints its own token",
+      "what": "The user's identity is now expressed in a token from the app's own issuer. No consent screen.",
+      "edges": [
+        5
+      ]
+    },
+    {
+      "title": "The gateway calls the app",
+      "what": "The app validates its own issuer's token as usual.",
+      "edges": [
+        6
+      ]
+    }
+  ]
+}
