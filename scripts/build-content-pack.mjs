@@ -47,6 +47,7 @@ export function buildPack() {
       { id: 'try-baseline', label: 'Baseline: an agent builds its normal', description: 'Enforcement is off until the baseline is established; then an out-of-pattern call asks a person.', group: 'try-it', action: { type: 'route', href: '/#baseline' }, terms: ['baseline', 'behaviour'] },
       { id: 'try-obo', label: 'On-behalf-of: a token for the MCP server', description: 'Real local RFC 8693 exchange in Live mode, with failure cases.', group: 'try-it', action: { type: 'route', href: '/#obo' }, terms: ['on-behalf-of'] },
       { id: 'try-idjag', label: 'ID-JAG: two issuers, no shared credential', description: 'The user IdP issues a grant, the partner issuer redeems it.', group: 'try-it', action: { type: 'route', href: '/#idjag' }, terms: ['id-jag'] },
+      { id: 'concept-why-it-matters', label: 'Why it matters', description: story.talkTrack.find((t) => t.id === 'why-it-matters').say, group: 'concept', action: { type: 'route', href: '/#talk' }, terms: ['three-signals'] },
       { id: 'concept-diagram', label: 'Diagrams', description: 'Three diagrams: the signals, on-behalf-of and ID-JAG.', group: 'concept', action: { type: 'route', href: '/#diagram' }, terms: ['three-signals'] },
       { id: 'ref-doctor', label: 'Doctor and health', description: 'Preflight checks and the demo-health/1 endpoint.', group: 'setup', action: { type: 'route', href: '/api/health' } },
     ],

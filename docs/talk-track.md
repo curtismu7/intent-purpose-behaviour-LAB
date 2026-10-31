@@ -36,6 +36,10 @@ The gateway swaps the caller's verified token for one minted for the downstream 
 
 When the target app trusts a different identity provider, the exchange returns an identity assertion grant and the gateway redeems it at that app's own issuer. The user's identity arrives at an app whose IdP you do not control, with no shared credential and no consent prompt. For the standalone ID-JAG walkthrough, see the sibling id-jag-standalone-LAB; this lab does not import from it.
 
+## Why it matters
+
+The challenge: a tool name and its arguments say what was asked for, but not what it was really for, whether this agent was ever meant to do it, or whether it normally does. Technical value, per the Ping deck (slide 48): three separable signals. Deterministic intent patterns and purpose declarations refuse hard; learned behaviour baselines drive alerts and approval. Business value, per the same slide: the enforceable declaration "this agent exists to reconcile invoices" unblocks unattended agents in processes that could not otherwise approve them. These are Ping claims, not measured by us.
+
 ## What is not proven
 
 None of the product behaviour here has been run on our tenant. The signal names and their one-line descriptions come from the Ping deck. The field names for intents, purpose, behaviour and on-behalf-of come from the Privilege console swagger of 2026-10-31, which is schema only: it proves the names exist, not how they behave. Reason codes, scoring points, the pattern syntax, the similarity stand-in, the alert and ask thresholds and the refusal switches are invented by the lab. Say so if asked.
