@@ -91,7 +91,7 @@ The container publishes to 127.0.0.1 only (a test pins it). Use OrbStack, not Do
 npm test    # server (node --test), web (vitest, drives the UI against the real server), scripts
 ```
 
-On Node 26: 112 tests pass (77 server, 18 web, 17 script tests).
+On Node 26: 127 tests pass (91 server, 19 web, 17 script tests).
 
 ## Troubleshooting
 

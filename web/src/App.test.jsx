@@ -86,7 +86,8 @@ describe("three signals", () => {
     // MinObservations above EnforceObservations is refused by the server with the swagger's cross-field rule
     const min = screen.getByLabelText(/MinObservations/);
     await userEvent.clear(min); await userEvent.type(min, "50");
-    expect(await screen.findByTestId("policy-error", {}, T)).toHaveTextContent(/EnforceObservations must not be below MinObservations/);
+    // clearing the field first produces an intermediate "whole number" error; wait for the answer to the final value
+    await waitFor(() => expect(screen.getByTestId("policy-error")).toHaveTextContent(/EnforceObservations must not be below MinObservations/), T);
     await userEvent.click(screen.getByTestId("policy-reset"));
     await waitFor(() => expect(screen.getByTestId("verdict-word")).toHaveTextContent("DENY"), T);
     expect(screen.queryByTestId("policy-error")).toBeNull();
