@@ -6,7 +6,7 @@ import { withServer } from './helpers.js';
 import { ALL, GHP, K, SK } from './payloads.js';
 
 // (the mock-issued tokens of the OBO and ID-JAG answers legitimately start eyJ..., so the JWT marker is the payload's own second part)
-const SECRETS = ['hunter2xyz', K, 'ghp_', 'eyJzdWIiOiJoMTIz'];
+const SECRETS = ['hunter2xyz', K, 'ghp_', 'eyJzdWIiOi'];
 const printable = (p) => /^[\x20-\x7e]*$/.test(p); // header values cannot carry control characters or non-ASCII; the body and path carry the full set
 
 function capture() {

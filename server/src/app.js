@@ -140,7 +140,7 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
     app.get('*', (req, res, next) => {
       let decoded;
       try { decoded = decodeURIComponent(req.path); } catch { return next(); }
-      if (decoded.split('/').some((seg) => seg.startsWith('.')) || decoded.includes('.') || /[\\\u0000]/.test(decoded)) return next();
+      if (decoded.includes('.') || /[\\\u0000]/.test(decoded)) return next();
       return res.sendFile(path.join(webDist, 'index.html'));
     });
   }

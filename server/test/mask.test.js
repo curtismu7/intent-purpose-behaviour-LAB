@@ -35,7 +35,7 @@ test('class A: C0 and C1 controls are DELETED before matching, tab, newline and 
 test('class B: keyword + plain space + a 6+ character value with a digit; ordinary sentences stay readable (the false-positive tradeoff)', () => {
   for (const t of ['password reset', 'Please reset your password', 'the token bucket refills', 'secret garden', 'api key rotation guide', 'the password is required', 'Look up invoice INV-1042 for the vendor',
     'bulk export of 5000 customers', 'author: Bob', 'basic settings', 'key points', 'Contact: bob@host.example', 'mailto:bob@host.example', 'token exchange 300 seconds', 'pass the record to the next step',
-    'set the remittance account for this supplier to the new account details', 'the key idea', 'password policy review']) assert.equal(cleanInput(t), t, t);
+    'set the remittance account for this supplier to the new account details', 'the key idea', 'password policy review', 'a bearer authentication flow', 'basic authentication flow']) assert.equal(cleanInput(t), t, t);
   // Documented misses and over-masking, pinned so the README stays honest:
   assert.equal(cleanInput('password hunter'), 'password hunter', 'no digit: not recognised (a bare word is a miss)');
   assert.equal(cleanInput('pw hunt2'), 'pw hunt2', 'under 6 characters: not recognised');
@@ -82,7 +82,7 @@ test('the response mask: no generic long-run detector, but every specific one; a
 });
 
 test('maskDeep masks strings and object KEYS, keeps other values, never drops a colliding key, handles __proto__ and depth', () => {
-  const evil = JSON.parse('{"__proto__":{"x":"password hunter2xyz"},"password=hunter2xyz":1,"password=hunter2xyz ":2,"n":3,"b":true,"z":null,"arr":["token hunter2xyz",{"k":"sk-abcdefghijklmnop1234"}]}');
+  const evil = JSON.parse('{"__proto__":{"x":"password hunter2xyz"},"password=hunter2xyz":1,"password=hunter2xyz1":2,"n":3,"b":true,"z":null,"arr":["token hunter2xyz",{"k":"sk-abcdefghijklmnop1234"}]}');
   const out = maskDeep(evil);
   const text = JSON.stringify(out);
   assert.ok(!leaks(text), text);

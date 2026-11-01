@@ -43,7 +43,7 @@ test('workspace ids: 40 characters accepted, 41 refused (literal boundary)', () 
 });
 
 test('workspace ids that look like a credential are refused: 24+ hex digits (23 are not), prefixes, opaque runs', () => {
-  const refused = [HEX24, 'a'.repeat(24), '0'.repeat(24), HEX40, UUID, `${HEX24.slice(0, 8)}-${HEX24.slice(8, 16)}-${HEX24.slice(16)}`,
+  const refused = [HEX24, 'abcdef-abcdef-abcdef-abcdef', 'a'.repeat(24), '0'.repeat(24), HEX40, UUID, `${HEX24.slice(0, 8)}-${HEX24.slice(8, 16)}-${HEX24.slice(16)}`,
     SK.slice(0, 19), 'sk-1', 'pw-hunter2xyz', 'pw-1', 'password-1', 'token-abc', 'secret', 'key-9', 'bearer-x', 'ghp-abcdefghijkl', 'eyj-x', 'my-token-abc123xyz', K, 'api-key-hunter2xyz'];
   for (const id of refused) { assert.equal(credentialLookingId(id), true, id); assert.equal(workspaceFrom({ headers: { 'x-workspace': id } }), null, id); }
   const fine = ['default', 'w-0123456789abcdef', 'w-1', 'ws-a', 'abc-1', 'a'.repeat(23), 'my-demo-run', 'team-7', 'k', 'sky-1'];
