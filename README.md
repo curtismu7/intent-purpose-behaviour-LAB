@@ -68,6 +68,17 @@ Other variables: `VITE_PORT` (Vite dev server, default 7101, `npm run dev -w web
 
 The header has a **Mock / Live** toggle on every page, and the banner and the mode chip show the same mode. Mock reads the tables. Live runs the real engine: real signing and verification, a real baseline learner of your own, and a form for your own call. Both modes are loopback-only with zero outbound calls (a test asserts it).
 
+### What you type is masked, and what the server refuses
+
+Everything you type (a description, an argument value) is cleaned before it is used, shown or kept: invisible characters and every C0/C1 control character are deleted (not turned into spaces, so a keyword cannot hide behind them), the text is NFKC-normalised, percent-encoding is undone up to three layers, and credential-shaped text becomes `[masked]`. The answer is masked again on the way out (strings and object keys of the evaluate and baseline answers). The hop panes show the masked call. It recognises: `password`, `pw`, `token`, `secret`, `api key` and similar followed by `:`/`=`/`is`, or by a plain space and a value of 6 or more characters with a digit; JSON-quoted assignments (`{"password":"..."}`); `Authorization:` lines; `Bearer ...`; URL userinfo with or without a scheme (`user:pw@host`, `//user:pw@host`); JWTs, `sk-`/`ghp_`/`AKIA` style keys, PEM blocks; and long opaque runs. **This is a heuristic, not a guarantee. Do not type a real credential.**
+
+- **What it still misses:** a bare word with no keyword before it and no credential shape ("swordfish", "password hunter" with no digit, a value under 6 characters after a plain space); look-alike letters from another alphabet (a Cyrillic `a` or Greek `o` inside "password" is not folded to Latin by NFKC); a keyword split by an ordinary space or a letter (`pass word=x`); encoding layered more than three deep; the weak words `key` and `pass` when nothing follows them.
+- **False-positive tradeoff:** a keyword + space + value is masked only when the value is 6 or more characters and contains a digit, so "password reset", "token bucket", "secret garden" and "the password is required" stay readable while "password hunter2xyz" is masked. The price is that it over-masks (`token: refresh` is masked because a colon after a keyword introduces a value; `token 300000` is masked) and under-masks digit-less words.
+- **Refused, never echoed, never cut:** a tool name or an argument name that looks like a credential is refused with 400 (`bad_tool`, `bad_args`); a description over 200 characters, an argument value over 64, a tool over 64, more than 8 arguments or a workspace id over 40 is refused whole (400), never silently cut. Lengths count what you typed, before masking. Error texts are fixed and never repeat what was typed (not even a slice of a key name): an unknown policy section is just "unknown policy section".
+- **Workspace ids:** an `X-Workspace` that looks like a credential (24 or more hex digits, with or without dashes; a prefix such as `sk-`, `pw-`, `token-`, `key-`; anything the masker recognises) gets `400 bad_workspace` and is never echoed. The page makes `w-` plus 16 hex digits (always a letter), and if the server refuses a stored id it throws it away, makes a new one and retries once, so a bad stored id cannot brick the tab.
+- **Status codes:** a missing file (`/favicon.ico`, `/robots.txt`, `/x.map`, `/x.svg`, `/assets/missing.js`, any dotfile) is a JSON 404, never a 200 page; the app shell is served only for paths with no dot in them; a wrong method on a known route is `405` with `Allow`; any other unknown path (including POST) is a JSON 404, so Express's HTML "Cannot POST /path" page, which echoes the path, never appears.
+- **The browser console** shows the deliberate 4xx answers above (a refused tool name, an over-long value, a 404 for a missing file) as ordinary network messages.
+
 ## Health, doctor and reset
 
 ```
@@ -98,6 +109,7 @@ On Node 26: 127 tests pass (91 server, 19 web, 17 script tests).
 - **The page says "Could not load the lab".** The server is not running, or it is on another port. Start it (`npm start`) and check `PORT`.
 - **Port is taken.** See "Ports, and what to do if the port is taken" above.
 - **`npm start` refuses to start.** Run `npm run doctor`; the first failing line says why (Node older than 26, a port outside 7100-7149).
+- **Your own call is refused (400).** The tool name or an argument name looks like a credential, or a value is over its limit (description 200, argument value 64, tool name 64 characters, 8 arguments). Use a plain name such as `invoices.lookup`.
 - **Your own call says it needs Live.** Switch the header toggle to Live: Mock only has tables for the scripted calls.
 - **The mock table is out of date after an engine change.** Run `npm run mock-table`; the doctor and a test tell you when it drifts.
 

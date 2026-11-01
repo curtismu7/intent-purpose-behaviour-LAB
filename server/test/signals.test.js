@@ -15,19 +15,31 @@ const decl = fillDeep(PURPOSE_PROFILE, C);
 const call = (tool, args = {}, description = '') => normalizeCall({ tool, description, args });
 const policy = clonePolicy();
 
-test('normalizeCall bounds its input and strips control characters', () => {
-  assert.deepEqual(normalizeCall({ tool: 'a.b', description: 'x‮y', args: { record: 'R\u0000-1' } }), { tool: 'a.b', description: 'x y', args: { record: 'R -1' } });
+test('normalizeCall bounds its input and deletes control characters (they never become a separator that could hide a keyword)', () => {
+  assert.deepEqual(normalizeCall({ tool: 'a.b', description: 'x‮y', args: { record: 'R\u0000-1' } }), { tool: 'a.b', description: 'xy', args: { record: 'R-1' } });
   for (const bad of [null, [], { tool: 'a b' }, { tool: '' }, { tool: 'x'.repeat(65) }, { tool: 'a', description: 5 }, { tool: 'a', args: [] }, { tool: 'a', args: { 'A-b': 1 } }, { tool: 'a', args: { __proto__x: 1 } }, { tool: 'a', args: { k: {} } }, { tool: 'a', args: { k: Infinity } }, { tool: 'a', args: { k: 1e9 } }]) {
     assert.throws(() => normalizeCall(bad), InputError, JSON.stringify(bad));
   }
   assert.throws(() => normalizeCall({ tool: 'a', args: Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`k${i}`, 1])) }), /at most 8/);
-  assert.equal(normalizeCall({ tool: 'a', description: 'y'.repeat(900) }).description.length, 200);
+  const d200 = `${'x '.repeat(99)}xy`; // 200 characters of ordinary words
+  assert.equal(d200.length, 200);
+  assert.equal(normalizeCall({ tool: 'a', description: d200 }).description, d200, '200 characters is accepted whole (the literal boundary)');
+  assert.throws(() => normalizeCall({ tool: 'a', description: `${d200}z` }), InputError, '201 is refused whole, never cut');
+  const v64 = `${'x '.repeat(31)}xy`; // 64 characters
+  assert.equal(v64.length, 64);
+  assert.equal(normalizeCall({ tool: 'a', args: { record: v64 } }).args.record, v64, 'an argument value of 64 characters is accepted');
+  assert.throws(() => normalizeCall({ tool: 'a', args: { record: `${v64}z` } }), InputError, '65 is refused');
+  const t64 = `${'ab.'.repeat(21)}a`; assert.equal(t64.length, 64);
+  assert.equal(normalizeCall({ tool: t64 }).tool, t64, 'a tool name of 64 characters is accepted');
+  assert.throws(() => normalizeCall({ tool: `${t64}b` }), InputError, '65 is refused');
+  assert.equal(Object.keys(normalizeCall({ tool: 'a', args: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`k${i}`, 1])) }).args).length, 8, '8 arguments are accepted');
+  assert.throws(() => normalizeCall({ tool: 'a', args: { k_24_chars_long_abcdefgh: 1, 'k_25_chars_long_abcdefghi': 1 } }), InputError, 'an argument name over 24 characters is refused');
 });
 
 test('hostile text is classified in bounded time (no regex is built from user input)', () => {
-  const nasty = `${'a'.repeat(60)}!`.repeat(3000);
+  const nasty = `${'a'.repeat(60)}!`.repeat(3); // 183 characters: inside the 200 limit
   const t = Date.now();
-  for (let i = 0; i < 50; i++) classify(normalizeCall({ tool: 'x.y', description: nasty, args: { record: nasty } }));
+  for (let i = 0; i < 2000; i++) classify(normalizeCall({ tool: 'x.y', description: nasty, args: { record: nasty.slice(0, 64) } }));
   assert.ok(Date.now() - t < 2000, 'bounded');
 });
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isLoopbackHost, assertBindAllowed, bindHost, portProblem, resolvePort, isReservedHost, scanHosts, scanKeys, cleanText, hostCheck, sameOriginWrites } from '../src/safety.js';
+import { isLoopbackHost, assertBindAllowed, bindHost, portProblem, resolvePort, isReservedHost, scanHosts, scanKeys, hostCheck, sameOriginWrites } from '../src/safety.js';
 
 test('loopback names', () => {
   for (const h of ['localhost', '127.0.0.1', '127.9.9.9', '::1', '[::1]']) assert.ok(isLoopbackHost(h), h);
@@ -37,12 +37,6 @@ test('key scan: only sk-MOCK- values are allowed in shipped text', () => {
   assert.equal(scanKeys('sk-ant-api03-abcdefghijkl').length, 1);
 });
 
-test('cleanText strips control and bidi characters and caps the length', () => {
-  assert.equal(cleanText('a\u0000b\nc‮d', 80), 'a b c d');
-  assert.equal(cleanText('x'.repeat(100), 10).length, 10);
-  assert.equal(cleanText(undefined), '');
-});
-
 const run = (mw, req) => { const out = {}; const res = { status(c) { out.status = c; return this; }, json(b) { out.body = b; return this; } }; mw(req, res, () => { out.next = true; }); return out; };
 
 test('hostCheck refuses a non-loopback Host (DNS rebinding)', () => {
@@ -72,7 +66,7 @@ test('same-origin compares the scheme as well as the host: https from the same h
   for (const bad of ['https://127.0.0.1:7100', 'ws://127.0.0.1:7100', 'http://127.0.0.1:7101', 'http://localhost:7100', 'http://127.0.0.1:7100.evil.example', 'not a url', 'null', 'file://127.0.0.1:7100']) assert.equal(post(bad).status, 403, bad);
 });
 
-test('review fixes: octets above 255 are not loopback; 4840 is reserved; control and bidi characters are stripped', async () => {
+test('review fixes: octets above 255 are not loopback; 4840 is reserved; control and bidi characters in the cast are stripped', async () => {
   assert.equal(isLoopbackHost('127.999.999.999'), false);
   assert.equal(isLoopbackHost('127.0.0.1'), true);
   assert.equal(isLoopbackHost('127.255.255.255'), true);
