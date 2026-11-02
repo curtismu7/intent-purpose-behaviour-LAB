@@ -12,14 +12,14 @@ test('every payload of every class is masked (literal expectations, not imported
 });
 
 test('exact outputs for the reported repros', () => {
-  assert.equal(cleanInput('pass\u0000word=hunter2xyz'), 'password=[masked]');
-  assert.equal(cleanInput('password hunter2xyz'), 'password [masked]');
-  assert.equal(cleanInput('the key is hunter2xyz'), 'the key is [masked]');
-  assert.equal(cleanInput('bob:hunter2xyz@host.example'), '[masked]@host.example');
-  assert.equal(cleanInput('//bob:hunter2xyz@host.example'), '//[masked]@host.example');
-  assert.equal(cleanInput('{"password":"hunter2xyz"}'), '{"password":"[masked]"}');
+  assert.equal(cleanInput('pass\u0000word=hunter2xyz'), '[masked]');
+  assert.equal(cleanInput('password hunter2xyz'), '[masked]');
+  assert.equal(cleanInput('the key is hunter2xyz'), '[masked]');
+  assert.equal(cleanInput('bob:hunter2xyz@host.example'), '[masked]host.example');
+  assert.equal(cleanInput('//bob:hunter2xyz@host.example'), '//[masked]host.example');
+  assert.equal(cleanInput('{"password":"hunter2xyz"}'), '{[masked]}');
   assert.equal(cleanInput(`s\u0001k-${K}`), '[masked]');
-  assert.equal(cleanInput('Bea\u0001rer hunter2xyz'), 'Bearer [masked]');
+  assert.equal(cleanInput('Bea\u0001rer hunter2xyz'), '[masked]');
 });
 
 test('class A: C0 and C1 controls are DELETED before matching, tab, newline and carriage return separate', () => {
@@ -39,23 +39,23 @@ test('class B: keyword + plain space + a 6+ character value with a digit; ordina
   // Documented misses and over-masking, pinned so the README stays honest:
   assert.equal(cleanInput('password hunter'), 'password hunter', 'no digit: not recognised (a bare word is a miss)');
   assert.equal(cleanInput('pw hunt2'), 'pw hunt2', 'under 6 characters: not recognised');
-  assert.equal(cleanInput('pw hunt22'), 'pw [masked]', '6+ characters with a digit: masked');
-  assert.equal(cleanInput('pw hunt2'.replace('hunt2', 'hunte2')), 'pw [masked]', 'exactly 6 characters with a digit: masked');
+  assert.equal(cleanInput('pw hunt22'), '[masked]', '6+ characters with a digit: masked');
+  assert.equal(cleanInput('pw hunt2'.replace('hunt2', 'hunte2')), '[masked]', 'exactly 6 characters with a digit: masked');
   assert.equal(cleanInput('pw hunt2').length, 'pw hunt2'.length, 'exactly 5 characters: kept');
 });
 
 test('class C and D forms', () => {
   assert.equal(cleanInput('mailto:bob@host.example'), 'mailto:bob@host.example');
   assert.ok(!leaks(cleanInput('{"a":1,"password":"hunter2xyz","b":2}')));
-  assert.equal(cleanInput('{"password":"my secret phrase hunter2xyz"}'), '{"password":"[masked]"}', 'a quoted value is masked to its closing quote');
+  assert.equal(cleanInput('{"password":"my secret phrase hunter2xyz"}'), '{[masked]}', 'a quoted value is masked to its closing quote');
   assert.ok(!leaks(cleanInput('{"token":hunter2xyz}')));
 });
 
-test('percent-decoding: three rounds are looked through, a fourth is not', () => {
+test('percent-decoding: layered encoding is looked through (the old bound of three rounds is gone: four layers are masked now)', () => {
   assert.ok(!leaks(cleanInput('password%3Dhunter2xyz')));
   assert.ok(!leaks(cleanInput('password%253Dhunter2xyz')));
   assert.ok(!leaks(cleanInput('password%25253Dhunter2xyz')));
-  assert.ok(leaks(cleanInput('password%2525253Dhunter2xyz')), 'four layers are beyond the bound: a documented miss');
+  assert.ok(!leaks(cleanInput('password%2525253Dhunter2xyz')), 'four layers: a miss of the old masker, masked by the shared one');
 });
 
 test('a secret placed after filler is masked, never cut off or kept by being cut in half', () => {
@@ -75,8 +75,8 @@ test('the response mask: no generic long-run detector, but every specific one; a
   assert.equal(maskResponseText(tp), tp);
   const line = 'POST https://mcp.fabrikam.example/mcp\nAuthorization: Bearer <MOCK-ISSUED token>\n' + tp;
   assert.equal(maskResponseText(line), line, 'the one fixed header line the app writes is kept');
-  assert.equal(maskResponseText('Authorization: Bearer hunter2xyz'), 'Authorization: [masked]');
-  assert.equal(maskResponseText('Authorization: Bearer <MOCK-ISSUED token> hunter2xyz'), 'Authorization: [masked]', 'only the exact fixed line is exempt');
+  assert.equal(maskResponseText('Authorization: Bearer hunter2xyz'), '[masked]');
+  assert.equal(maskResponseText('Authorization: Bearer <MOCK-ISSUED token> hunter2xyz'), '[masked]', 'only the exact fixed line is exempt');
   assert.ok(!leaks(maskResponseText('a\nb password=hunter2xyz\nc')));
   assert.equal(maskResponseText('keep\nthe lines'), 'keep\nthe lines');
 });
@@ -87,7 +87,7 @@ test('maskDeep masks strings and object KEYS, keeps other values, never drops a 
   const text = JSON.stringify(out);
   assert.ok(!leaks(text), text);
   assert.equal(out.n, 3); assert.equal(out.b, true); assert.equal(out.z, null);
-  assert.equal(Object.keys(out).filter((k) => k.startsWith('password=')).length, 2, 'the two keys that collide after masking both survive');
+  assert.equal(Object.keys(out).filter((k) => k.startsWith('[masked]')).length, 2, 'the two keys that collide after masking both survive');
   assert.equal(Object.getPrototypeOf(out), Object.prototype, 'a __proto__ key stays a plain own key');
   let deep = { v: 'password hunter2xyz' };
   for (let i = 0; i < 20_000; i += 1) deep = { d: deep };

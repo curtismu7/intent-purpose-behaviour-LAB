@@ -130,10 +130,10 @@ test('the typed text that is accepted comes back masked, in the call and in the 
     const r = await post({ mode: 'live', call: { tool: 'x.y', description: 'please use password hunter2xyz', args: { note: 'the key is hunter2xyz', record: '//bob:hunter2xyz@host.example' } } });
     assert.equal(r.status, 200);
     const j = await r.json();
-    assert.equal(j.call.description, 'please use password [masked]');
-    assert.equal(j.call.args.note, 'the key is [masked]');
-    assert.equal(j.call.args.record, '//[masked]@host.example');
-    assert.ok(j.hops[0].request.includes('please use password [masked]'));
+    assert.equal(j.call.description, 'please use [masked]');
+    assert.equal(j.call.args.note, '[masked]');
+    assert.equal(j.call.args.record, '//[masked]host.example');
+    assert.ok(j.hops[0].request.includes('please use [masked]'));
     assert.ok(j.hops[0].request.includes('Authorization: Bearer <MOCK-ISSUED token>'), 'the fixed header line of the pane is not masked away');
     assert.ok(!JSON.stringify(j).includes('hunter2xyz'));
   });

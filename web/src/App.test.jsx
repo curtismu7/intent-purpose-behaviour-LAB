@@ -122,8 +122,8 @@ describe("three signals", () => {
     await userEvent.type(desc, "look up the invoice, password hunter2xyz");
     await userEvent.type(screen.getByLabelText(/record argument/), "bob:hunter2xyz@host.example");
     await userEvent.click(screen.getByTestId("custom-run"));
-    await waitFor(() => expect(screen.getByTestId("call-json")).toHaveTextContent("password [masked]"), T);
-    expect(screen.getByTestId("call-json")).toHaveTextContent("[masked]@host.example");
+    await waitFor(() => expect(screen.getByTestId("call-json")).toHaveTextContent("look up the invoice, [masked]"), T);
+    expect(screen.getByTestId("call-json")).toHaveTextContent("[masked]host.example");
     expect(document.body.textContent).not.toContain("hunter2xyz");
     const tool = screen.getByLabelText(/Tool name/);
     await userEvent.clear(tool);

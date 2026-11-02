@@ -1,13 +1,14 @@
 // Rule 13: a workspace id keeps one visitor's state apart from another's. Server state per workspace is small: the recent runs
 // and the Live baseline learner. The browser sends its id in X-Workspace (default "default"); state is bounded in count, size and age.
 import { createLearner } from './behaviour.js';
-import { looksLikeCredential } from './mask.js';
+import { isCredentialId, looksLikeCredential } from './mask.js';
 
 export const WORKSPACE_RE = /^[a-z0-9-]{1,40}$/;
 // An id is echoed in answers and kept as a map key, so one that looks like a credential is refused (400 bad_workspace) and never echoed:
-// 24 or more hex digits (a hash, a UUID, a key), a prefix such as sk-, pw- or token-, or anything the masker recognises. The page's own ids are w-<16 hex>.
+// 24 or more hex digits (a hash, a UUID, a key), a prefix such as sk-, pw- or token- (this app's own, stricter shape rules), or anything the shared masker's
+// isCredentialId flags, or the adapter (a bare opaque run). The page's own ids are w-<16 hex>.
 const CREDENTIAL_PREFIX = /^(?:sk|pk|rk|pw|pwd|pass|passwd|password|secret|token|key|apikey|bearer|ghp|gho|ghu|ghs|ghr|glpat|xox[abprs]|akia|asia|eyj)(?:-|$)/;
-export const credentialLookingId = (id) => /^[a-f0-9]{24,}$/.test(id.replace(/-/g, '')) || CREDENTIAL_PREFIX.test(id) || looksLikeCredential(id);
+export const credentialLookingId = (id) => /^[a-f0-9]{24,}$/.test(id.replace(/-/g, '')) || CREDENTIAL_PREFIX.test(id) || isCredentialId(id) || looksLikeCredential(id);
 export const DEFAULT_WORKSPACE = 'default';
 export const MAX_RUNS = 20;
 export const MAX_LOG = 60;

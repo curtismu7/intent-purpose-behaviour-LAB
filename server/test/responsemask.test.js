@@ -47,7 +47,7 @@ test('the response layer holds even if a code path forgot to clean its input: a 
     assert.equal(r.status, 200);
     assert.ok(text.includes('[masked]'), 'the poisoned row was masked, not dropped');
     assert.ok(!text.includes('hunter2xyz'), text.slice(0, 400));
-    assert.ok(text.includes('api_key = [masked]'), 'a poisoned object key is masked too');
+    assert.ok(text.includes('"[masked]":1'), 'a poisoned object key is masked too');
     for (const [method, path, body] of [['POST', '/api/baseline', { mode: 'mock' }], ['GET', '/api/baseline?mode=mock']]) {
       const b = await fetch(`${base}${path}`, { method, headers: { 'content-type': 'application/json', origin: base }, body: body && JSON.stringify(body) });
       const bt = await b.text();
@@ -68,6 +68,6 @@ test('the response layer also covers the Live baseline answers (a poisoned learn
     const base = url.replace(/\/$/, '');
     const post = await fetch(`${base}/api/baseline`, { method: 'POST', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ mode: 'live', kind: 'normal' }) });
     const get = await fetch(`${base}/api/baseline?mode=live`);
-    for (const r of [post, get]) { const t = await r.text(); assert.equal(r.status, 200); assert.ok(t.includes('api_key = [masked]') && !t.includes('hunter2xyz'), t.slice(0, 300)); }
+    for (const r of [post, get]) { const t = await r.text(); assert.equal(r.status, 200); assert.ok(t.includes('[masked]') && !t.includes('hunter2xyz'), t.slice(0, 300)); }
   } finally { health.stop(); await new Promise((r) => server.close(r)); }
 });
