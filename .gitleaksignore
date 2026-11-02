@@ -1,0 +1,2 @@
+# Test fixtures, not secrets: a PEM frame around a test value in the masking tests
+fb64f15ae637740c1f40a2744312c7f056880d97:server/test/payloads.js:private-key:22
