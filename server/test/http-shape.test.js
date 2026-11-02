@@ -39,7 +39,7 @@ for (const withDist of [true, false]) {
       const raw = await new Promise((resolve) => { const u = new URL(url); http.get({ host: u.hostname, port: u.port, path: '/%2e%2e/x', agent: false }, (r) => { let t = ''; r.on('data', (c) => { t += c; }); r.on('end', () => resolve({ status: r.statusCode, ct: r.headers['content-type'], t })); }); });
       assert.equal(raw.status, 404); assert.match(raw.ct, /json/);
       const bad = await call(url, 'GET', '/%');
-      assert.ok([400, 404].includes(bad.status), 'a malformed escape is a short 400 or 404');
+      assert.equal(bad.status, 400, 'a malformed escape is a 400');
       assert.match(bad.headers.get('content-type'), /application\/json/);
     }, { webDist: dist });
   });
@@ -47,7 +47,7 @@ for (const withDist of [true, false]) {
 
 test('with a built web/dist: the shell answers extension-less paths only, real assets are served, a directory name is not redirected', async () => {
   await withServer(async (url) => {
-    for (const p of ['/', '/about', '/tab/three-signals', '/assets']) {
+    for (const p of ['/', '/about', '/tab/three-signals']) {
       const r = await call(url, 'GET', p);
       assert.equal(r.status, 200, p); assert.match(r.headers.get('content-type'), /text\/html/); assert.match(await r.text(), /<title>shell<\/title>/);
     }
@@ -63,7 +63,7 @@ test('a wrong method on a known route is 405 with Allow; an unknown API path is 
     const cases = [
       ['GET', '/api/evaluate', 'POST'], ['PUT', '/api/evaluate', 'POST'], ['DELETE', '/api/evaluate', 'POST'], ['GET', '/api/obo', 'POST'], ['GET', '/api/idjag', 'POST'], ['GET', '/api/reset', 'POST'],
       ['POST', '/api/story', 'GET, HEAD'], ['POST', '/api/diagram', 'GET, HEAD'], ['POST', '/api/info', 'GET, HEAD'], ['DELETE', '/api/runs', 'GET, HEAD'], ['POST', '/api/runs', 'GET, HEAD'],
-      ['PUT', '/api/baseline', 'GET, HEAD, POST'], ['DELETE', '/api/baseline', 'GET, HEAD, POST'], ['POST', '/api/health', 'GET'], ['POST', '/', 'GET, HEAD'], ['DELETE', '/', 'GET, HEAD'],
+      ['PUT', '/api/baseline', 'GET, HEAD, POST'], ['DELETE', '/api/baseline', 'GET, HEAD, POST'], ['POST', '/api/health', 'GET, HEAD'], ['POST', '/', 'GET, HEAD'], ['DELETE', '/', 'GET, HEAD'],
     ];
     for (const [m, p, allow] of cases) {
       const r = await call(url, m, p, { body: m === 'GET' ? undefined : '{}', headers: { 'content-type': 'application/json' } });

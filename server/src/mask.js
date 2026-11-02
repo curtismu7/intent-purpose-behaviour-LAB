@@ -11,6 +11,17 @@ const m = createMasker({
   opaqueKeys: new Set(['traceparent', 'traceId']),
 });
 
+// The answers of the two token flows (obo, idjag) take no typed text: the scenario is a listed id and the traceparent a strict hex form. Their exhibits are
+// MOCK-ISSUED tokens shown raw by design (labelled as such), as keys (token, subject_token ...) and inside the hop panes, so those subtrees are opaque and the rest
+// of the answer (titles, lessons, config, checks) is masked like any other, as prose (keyMode none).
+const flow = createMasker({
+  markStyle: 'plain',
+  keyMode: 'none',
+  opaqueKeys: new Set(['traceparent', 'traceId']),
+  pathRules: [{ match: /^(?:original|exchanged|grant|access|exchangeRequest|redeemRequest|jwks|hops)(?:\.|$)/, opaque: true }],
+});
+export const maskFlow = flow.maskDeep;
+
 export const MARK = '[masked]';
 export const isCredentialId = m.isCredentialId;
 // An answer's text and an answer: the same masker, strings and object keys, the input never mutated.
@@ -39,9 +50,11 @@ const TYPED_EXTRAS = [
   [/\b((?:log[ -]?in|user(?:name)?|account|credentials?|creds)\s{0,3}[:=]\s{0,3}[^\s/[\]]{1,60}\s{0,3}[/|]\s{0,3})([^\s[\]]{1,100})/gi, (s, head) => `${head}${MARK}`],
 ];
 const extras = (text) => TYPED_EXTRAS.reduce((acc, [re, fn]) => acc.replace(re, fn), text);
+// True when one of this app's own rules (not the shared masker) recognises the text.
+export const matchesAppRules = (value) => { const s = flatten(String(value ?? '')); return extras(s) !== s; };
 
 // What a visitor typed, cleaned for storing and showing: masked, then whitespace collapsed. NOT cut to length: the caller refuses an over-long value instead,
 // so a secret that straddles a limit is masked whole and nothing is silently dropped.
 export const cleanInput = (value) => extras(m.maskText(flatten(String(value ?? '')))).replace(/\s+/g, ' ').trim();
 // For a name or an id that is echoed as-is or refused: true when it is credential-shaped (the caller refuses without echoing it).
-export const looksLikeCredential = (value) => { const s = flatten(String(value ?? '')); return m.looksLikeCredential(s) || extras(s) !== s; };
+export const looksLikeCredential = (value) => m.looksLikeCredential(flatten(String(value ?? ''))) || matchesAppRules(value);
