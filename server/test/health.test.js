@@ -34,7 +34,7 @@ test('an unexpected server error becomes a short JSON 500 with no message, stack
       const r = await post(base, path, body);
       const text = await r.text();
       assert.equal(r.status, 500, path);
-      assert.equal(text, JSON.stringify({ error: 'internal_error' }), path);
+      assert.equal(text, JSON.stringify({ error: 'internal' }), path);
       assert.ok(!/boom|\/Users\/|node_modules|at \w+ \(/.test(text));
     }
     assert.equal((await fetch(`${base}/api/health`)).status, 200, 'the server stays up');

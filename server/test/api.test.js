@@ -143,7 +143,7 @@ test('bad workspace ids are refused; oversized and malformed bodies get a short 
     assert.equal((await post(url, '/api/evaluate', { mode: 'mock', scenario: 'legit-lookup' }, { 'x-workspace': 'BAD ID' })).status, 400);
     const raw = (body) => fetch(`${url}/api/evaluate`, { method: 'POST', headers: { 'content-type': 'application/json', origin: url }, body });
     const big = await raw(JSON.stringify({ pad: 'x'.repeat(9000) }));
-    assert.deepEqual([big.status, await big.json()], [413, { error: 'payload_too_large' }]);
+    assert.deepEqual([big.status, await big.json()], [413, { error: 'too_large' }]);
     const bad = await raw('{not json');
     const text = JSON.stringify(await bad.json());
     assert.equal(bad.status, 400);

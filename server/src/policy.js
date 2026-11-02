@@ -26,7 +26,7 @@ export function validatePolicy(input) {
   const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
   if (!isObj(input)) throw new InputError('bad_policy', 'policy must be an object');
   const out = {};
-  for (const sec of Object.keys(input)) if (!Object.hasOwn(SPEC, sec)) throw new InputError('bad_policy', `unknown policy section "${String(sec).slice(0, 24)}"`);
+  for (const sec of Object.keys(input)) if (!Object.hasOwn(SPEC, sec)) throw new InputError('bad_policy', 'unknown policy section');
   for (const [sec, fields] of Object.entries(SPEC)) {
     const given = input[sec] === undefined ? DEFAULT_POLICY[sec] : input[sec];
     if (!isObj(given)) throw new InputError('bad_policy', `${sec} must be an object`);
@@ -34,7 +34,7 @@ export function validatePolicy(input) {
       if ((sec === 'intent' || sec === 'behaviour') && FORBIDDEN.has(k)) {
         throw new InputError('scored_signal_cannot_deny', `${sec}.${k}: only the deterministic tier may refuse; a scored signal can alert or ask a person, never deny`);
       }
-      if (!Object.hasOwn(fields, k)) throw new InputError('bad_policy', `unknown field ${sec}.${String(k).slice(0, 24)}`);
+      if (!Object.hasOwn(fields, k)) throw new InputError('bad_policy', `unknown field in policy.${sec}`);
     }
     out[sec] = {};
     for (const [k, spec] of Object.entries(fields)) {

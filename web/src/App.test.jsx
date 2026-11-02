@@ -115,6 +115,24 @@ describe("three signals", () => {
     expect(screen.getByTestId("verdict-word")).toHaveTextContent("DENY");
   }, 60000);
 
+  it("your own call: a typed secret is shown masked everywhere on the page, and a credential-shaped tool name is refused without being shown", async () => {
+    await mount();
+    await userEvent.click(screen.getByTestId("mode-live"));
+    const desc = await screen.findByLabelText(/What the request says/, {}, T);
+    await userEvent.type(desc, "look up the invoice, password hunter2xyz");
+    await userEvent.type(screen.getByLabelText(/record argument/), "bob:hunter2xyz@host.example");
+    await userEvent.click(screen.getByTestId("custom-run"));
+    await waitFor(() => expect(screen.getByTestId("call-json")).toHaveTextContent("look up the invoice, [masked]"), T);
+    expect(screen.getByTestId("call-json")).toHaveTextContent("[masked]host.example");
+    expect(document.body.textContent).not.toContain("hunter2xyz");
+    const tool = screen.getByLabelText(/Tool name/);
+    await userEvent.clear(tool);
+    await userEvent.type(tool, "sk-abcdefghijklmnop1234");
+    await userEvent.click(screen.getByTestId("custom-run"));
+    await waitFor(() => expect(document.body.textContent).toMatch(/looks like a credential/), T);
+    expect(document.body.textContent).not.toContain("abcdefghijklmnop");
+  }, 60000);
+
   it("verticals swap the cast through {{tokens}} and no token reaches the page", async () => {
     await mount();
     await userEvent.selectOptions(screen.getByTestId("vertical"), "health");

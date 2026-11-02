@@ -60,11 +60,6 @@ export function scanKeys(text) {
   return [...String(text).matchAll(/\bsk-(?!MOCK-)[A-Za-z0-9_-]{8,}/g)].map((m) => `${m[0].slice(0, 8)}...`);
 }
 
-// Free text from a caller (custodian, description): control characters stripped, length capped. Rendered as text, never as markup.
-export function cleanText(value, max = 80) {
-  return String(value ?? '').replace(/[\u0000-\u001f\u007f-\u009f‪-‮⁦-⁩]/g, ' ').trim().slice(0, max);
-}
-
 export function hostCheck(req, res, next) {
   const raw = String(req.headers.host || '');
   const host = raw.startsWith('[') ? raw.slice(0, raw.indexOf(']') + 1) : raw.replace(/:\d+$/, '');
