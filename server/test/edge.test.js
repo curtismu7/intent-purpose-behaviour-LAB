@@ -64,6 +64,16 @@ test('the token flows still show their MOCK-ISSUED tokens raw (the one exempt pa
   });
 });
 
+test('the trace id the app generates is shown raw in every answer that carries one, and is the id in the traceparent of the hops', async () => {
+  await serve(async (base) => {
+    for (const [p, body] of [['/api/evaluate', { mode: 'mock', scenario: 'legit-lookup' }], ['/api/obo', { mode: 'live', scenario: 'ok' }], ['/api/idjag', { mode: 'mock', scenario: 'ok' }]]) {
+      const j = await (await send(base, 'POST', p, { headers: json, body: JSON.stringify(body) })).json();
+      assert.match(j.traceId, /^[0-9a-f]{32}$/, p);
+      for (const hop of j.hops) assert.ok(hop.traceparent.startsWith(`00-${j.traceId}-`), `${p}: ${hop.traceparent}`);
+    }
+  });
+});
+
 test('415: any charset but utf-8 is a fixed body, the value is never answered and nothing is logged', async () => {
   const cap = capture();
   const seen = [];

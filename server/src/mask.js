@@ -1,24 +1,26 @@
 // The app's masking adapter over the shared masker (server/src/shared/mask.js, shared-masker 9bc664a, v1.4.0). The old names stay, so no call site changes.
 // Masking is a HEURISTIC: it catches the common shapes and plain-language passwords listed in the shared README ("Known limits"), not every secret. Do not type a real credential.
-// Choices (docs/ADOPTION.md): marks are exactly [masked] (markStyle plain); traceparent and traceId are the only opaque keys, because the app generates them itself
-// (random W3C trace context, shown raw by design). Everything the visitor types is masked under any other key.
+// Choices (docs/ADOPTION.md): marks are exactly [masked] (markStyle plain); traceId is the only opaque key, because the app generates it itself and shows it raw; the token flows
+// (maskFlow below) are the only other thing shown raw. Everything the visitor types is masked under any key.
 // Typed text goes through cleanInput: the shared masker, then delete invisible and control characters, then the five TYPED_EXTRAS below. The extras are this app's own rules
 // for gaps the shared masker states or has (see the README of this app, "Masking"): they run on typed text only, never on an answer, and each one has a test.
 import { createMasker } from './shared/mask.js';
 
 const m = createMasker({
   markStyle: 'plain',
-  opaqueKeys: new Set(['traceparent', 'traceId']),
+  // traceId: the 32-hex W3C trace id the app generates for every run (random, mock); the shared masker reads a bare 32-character run as a key.
+  // (traceparent values and the hop panes' header lines have dashes and are left alone.)
+  opaqueKeys: new Set(['traceId']),
 });
 
 // The answers of the two token flows (obo, idjag) take no typed text: the scenario is a listed id and the traceparent a strict hex form. Their exhibits are
 // MOCK-ISSUED tokens shown raw by design (labelled as such), as keys (token, subject_token ...) and inside the hop panes, so those subtrees are opaque and the rest
-// of the answer (titles, lessons, config, checks) is masked like any other, as prose (keyMode none).
+// of the answer (titles, lessons, config, checks) is masked like any other. `proof` is opaque too: it is a block of the app's own prose, and
+// one sentence of it ("ClientID, ClientSecret, AuthMethod and PrivateKeyPEM", a list of schema field names) is read by the shared masker as a secret.
 const flow = createMasker({
   markStyle: 'plain',
-  keyMode: 'none',
-  opaqueKeys: new Set(['traceparent', 'traceId']),
-  pathRules: [{ match: /^(?:original|exchanged|grant|access|exchangeRequest|redeemRequest|jwks|hops)(?:\.|$)/, opaque: true }],
+  opaqueKeys: new Set(['traceId']),
+  pathRules: [{ match: /^(?:original|exchanged|grant|access|exchangeRequest|redeemRequest|jwks|hops|proof)(?:\.|$)/, opaque: true }],
 });
 export const maskFlow = flow.maskDeep;
 

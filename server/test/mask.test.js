@@ -108,3 +108,11 @@ test('hostile input is bounded in time (no catastrophic backtracking)', () => {
 test('masking is idempotent: a masked text is not masked again into something else', () => {
   for (const p of ALL) { const once = cleanInput(p); assert.equal(cleanInput(once), once, p); }
 });
+
+test('cleanInput deletes control, bidi and tag characters from what it keeps, and keeps zero-width spaces (literal expectations)', () => {
+  assert.equal(cleanInput('a\u0085b\u009fc\u007fd\u0001e'), 'abcde', 'C1 controls, DEL and C0 controls are deleted');
+  assert.equal(cleanInput('x\u202ey\u2066z\u200fw'), 'xyzw', 'bidi controls are deleted');
+  assert.equal(cleanInput('ok\u{E0068}\u{E0069}'), 'ok', 'tag characters (invisible text) are deleted');
+  assert.equal(cleanInput('a\u200bb'), 'a\u200bb', 'a zero-width space changes nothing on screen and stays');
+  assert.equal(cleanInput('a\tb\nc'), 'a b c', 'tab and newline are whitespace, collapsed');
+});
