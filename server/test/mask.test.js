@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARK, cleanInput, looksLikeCredential, maskDeep, maskResponseText } from '../src/mask.js';
+import { MARK, cleanInput, looksLikeCredential, looksLikeCredentialName, maskDeep, maskResponseText } from '../src/mask.js';
 
 import { ALL, HEX24, K, SK } from './payloads.js';
 
@@ -65,9 +65,13 @@ test('a secret placed after filler is masked, never cut off or kept by being cut
   assert.ok(!leaks(cleanInput(`${'x '.repeat(5000)}${SK}`)));
 });
 
-test('looksLikeCredential: names and ids', () => {
-  for (const t of [SK, 'password-hunter2xyz', K, 'pw-hunter2xyz', HEX24, 'token_hunter2xyz']) assert.equal(looksLikeCredential(t), true, t);
-  for (const t of ['invoices.lookup', 'payees.update', 'refunds.update_destination', 'x.y', 'reconcile_batch_2024_q1', 'w-0123456789abcdef', 'default', 'my-workspace', 'records.export']) assert.equal(looksLikeCredential(t), false, t);
+test('looksLikeCredential: names and ids (the name form also refuses 24+ hex digits, which free text keeps: digests and trace ids are ordinary there)', () => {
+  for (const t of [SK, 'password-hunter2xyz', K, 'pw-hunter2xyz', 'token_hunter2xyz']) { assert.equal(looksLikeCredential(t), true, t); assert.equal(looksLikeCredentialName(t), true, t); }
+  assert.equal(looksLikeCredential(HEX24), false, 'free text: 24 hex digits are a digest or an id');
+  for (const t of [HEX24, `${HEX24.slice(0, 8)}-${HEX24.slice(8, 16)}-${HEX24.slice(16)}`]) assert.equal(looksLikeCredentialName(t), true, t);
+  for (const t of ['invoices.lookup', 'payees.update', 'refunds.update_destination', 'x.y', 'reconcile_batch_2024_q1', 'w-0123456789abcdef', 'default', 'my-workspace', 'records.export']) {
+    assert.equal(looksLikeCredential(t), false, t); assert.equal(looksLikeCredentialName(t), false, t);
+  }
 });
 
 test('the response mask: no generic long-run detector, but every specific one; an unchanged text is returned as it came', () => {
