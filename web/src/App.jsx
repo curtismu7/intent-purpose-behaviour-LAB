@@ -5,6 +5,7 @@ import FlowTab from "./components/FlowTab";
 import DiagramTab from "./components/DiagramTab";
 import TalkTrack from "./components/TalkTrack";
 import { getJson, resetWorkspace } from "./api";
+import ShelfLink from "./components/ShelfLink.jsx";
 
 export const TABS = [
   { id: "signals", label: "Three signals" },
@@ -97,6 +98,7 @@ export default function App() {
             {!presenter && story && <p className="intro">{story.intro}</p>}
           </div>
           <div className="head__tools">
+            <ShelfLink />
             <div className="seg" role="group" aria-label="Mode">
               <button type="button" aria-pressed={mode === "mock"} onClick={() => setMode("mock")} data-testid="mode-mock">Mock</button>
               <button type="button" aria-pressed={mode === "live"} onClick={() => setMode("live")} data-testid="mode-live">Live</button>

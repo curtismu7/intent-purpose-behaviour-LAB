@@ -27,6 +27,7 @@ import { createWorkspaces, workspaceFrom } from './workspaces.js';
 import { formatTraceparent, newTrace } from './trace.js';
 import { maskDeep, maskFlow } from './mask.js';
 import { buildMethodTable, charsetProblem, isPageAddress, methodNotAllowed } from './shared/hygiene.js';
+import { shelfInfo } from './shelfLink.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = process.env.WEB_DIST || path.resolve(HERE, '../../web/dist');
@@ -34,6 +35,7 @@ const CONFIG = process.env.CUSTOMER_CONFIG || path.resolve(HERE, '../../customer
 
 // The route table: one place for the 405 + Allow answer. HEAD is added wherever GET is.
 export const ROUTES = {
+  '/api/shelf': ['GET'],
   '/': ['GET'],
   '/api/health': ['GET'],
   '/api/story': ['GET'], '/api/diagram': ['GET'], '/api/info': ['GET'], '/api/runs': ['GET'],
@@ -169,6 +171,7 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
   //    /% are not), from a client that did not say it wants something other than HTML. This app's own pages have no dot in their path, so a dot anywhere
   //    (/a.b/c) is also a 404, narrower than isPageAddress.
   if (fs.existsSync(path.join(webDist, 'index.html'))) {
+app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(webDist, { index: false, dotfiles: 'ignore', fallthrough: true, redirect: false }));
     app.use((req, res, next) => {
       const accept = req.get('accept');
