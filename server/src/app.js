@@ -164,6 +164,7 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
   // Reset clears this workspace's runs and its Live baseline only.
   api.post('/reset', workspace, (req, res) => { noStore(res); workspaces.reset(req.ws); return res.json({ reset: 'ok', workspace: req.ws }); });
   api.use((_req, res) => fail(res, 404, 'not_found'));
+  app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   app.use('/api', api);
 
   // 7. Static files and the single-page-app shell. express.static answers real files only (no index, dotfiles ignored, no redirect that would repeat a path) and
@@ -171,7 +172,6 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
   //    /% are not), from a client that did not say it wants something other than HTML. This app's own pages have no dot in their path, so a dot anywhere
   //    (/a.b/c) is also a 404, narrower than isPageAddress.
   if (fs.existsSync(path.join(webDist, 'index.html'))) {
-app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(webDist, { index: false, dotfiles: 'ignore', fallthrough: true, redirect: false }));
     app.use((req, res, next) => {
       const accept = req.get('accept');
