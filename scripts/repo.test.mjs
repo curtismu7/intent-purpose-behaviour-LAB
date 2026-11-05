@@ -68,7 +68,7 @@ test('README follows the README standard, and the docs never use the word "door"
   const readme = read('README.md');
   assert.match(readme.split('\n')[0], /^# .* LAB$/);
   assert.match(readme, /^Tier: Demo$/m);
-  assert.match(readme, /^Repo: https:\/\/github.com/curtismu7\/intent-purpose-behaviour-LAB$/m);
+  assert.match(readme, /^Repo: https:\/\/github\.com\/curtismu7\/intent-purpose-behaviour-LAB$/m);
   for (const h of ['## What is simulated', '## Run from a clone', '## Settings file', '## Ports, and what to do if the port is taken', '## Mock and live modes', '## Health, doctor and reset', '## Docker (optional)', '## Tests', '## Troubleshooting', '## Ownership']) assert.ok(readme.includes(h), h);
   for (const f of ['README.md', 'CLAUDE.md', 'docs/talk-track.md', 'docs/safety.md']) assert.ok(!/\bdoor\b/i.test(read(f)), f);
 });
