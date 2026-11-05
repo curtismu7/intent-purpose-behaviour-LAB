@@ -3,7 +3,7 @@
 A simulation of the "Intent, Purpose and Behaviour" release claims, plus the two token flows marked new in the same release: three signals asked of every call, on-behalf-of, and ID-JAG.
 
 Tier: Demo
-Repo: https://github.com/ping-sandbox/intent-purpose-behaviour-LAB
+Repo: https://github.com/curtismu7/intent-purpose-behaviour-LAB
 Catalog: D101
 
 Source: the Ping ID4AI Workforce H2 2026 deck, slide 48 (release 2026-11-02). **Every product claim is a Ping release claim, UNVERIFIED on our tenant.** Nothing here calls a real gateway, identity provider or tenant, and nothing leaves your machine.
@@ -30,7 +30,7 @@ Field names for intents (`AIIntent`), purpose (`PurposeProfile`), behaviour (`Be
 Prerequisites: Node 26 or newer. Docker only if you use the Docker form. Mock mode works with no setup at all: no tenant, no credentials, no settings file.
 
 ```
-git clone https://github.com/ping-sandbox/intent-purpose-behaviour-LAB.git
+git clone https://github.com/curtismu7/intent-purpose-behaviour-LAB.git
 cd intent-purpose-behaviour-LAB
 npm ci
 npm run build
