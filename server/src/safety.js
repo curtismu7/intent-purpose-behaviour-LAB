@@ -60,10 +60,21 @@ export function scanKeys(text) {
   return [...String(text).matchAll(/\bsk-(?!MOCK-)[A-Za-z0-9_-]{8,}/g)].map((m) => `${m[0].slice(0, 8)}...`);
 }
 
+// Extra host names the Host check accepts, set per lab via LAB_ALLOWED_HOSTS: proxy-served names that
+// point at this Mac, such as <lab>.local.ping-devops.com. Loopback always works.
+const HOSTNAME = /^(?=.{1,253}$)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+export function allowedExtraHosts(env = process.env) {
+  const extra = String(env.LAB_ALLOWED_HOSTS || '').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+  for (const h of extra) if (!HOSTNAME.test(h)) throw new Error(`LAB_ALLOWED_HOSTS: not a host name: ${h}`);
+  return new Set(extra);
+}
+
 export function hostCheck(req, res, next) {
   const raw = String(req.headers.host || '');
   const host = raw.startsWith('[') ? raw.slice(0, raw.indexOf(']') + 1) : raw.replace(/:\d+$/, '');
-  if (!isLoopbackHost(host)) return res.status(403).json({ error: 'bad_host', message: 'Host must be a loopback name' });
+  if (!isLoopbackHost(host) && !allowedExtraHosts().has(host.toLowerCase())) {
+    return res.status(403).json({ error: 'bad_host', message: 'Host must be loopback or on LAB_ALLOWED_HOSTS' });
+  }
   next();
 }
 
@@ -75,11 +86,18 @@ export function sameOriginWrites(req, res, next) {
   const origin = req.headers.origin;
   if (origin) {
     let ok = false;
-    // The app serves plain http on loopback, so the page's own origin is http://<Host>. A different scheme (https) or any other
-    // host or port is cross-origin, even when the host part happens to match.
+    // Behind the shared lab-proxy the browser origin is https://local.ping-devops.com:8443 while the app
+    // serves plain http on loopback: the proxy sets X-Forwarded-Host + X-Forwarded-Proto, so compare the
+    // origin against the forwarded pair when present, and against the raw Host + http scheme otherwise.
+    const fwdHost = String(req.headers['x-forwarded-host'] || '').toLowerCase();
+    const fwdProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
     try {
       const u = new URL(origin);
-      ok = u.protocol === 'http:' && u.host.toLowerCase() === String(req.headers.host || '').toLowerCase();
+      if (fwdHost) {
+        ok = u.host.toLowerCase() === fwdHost && u.protocol === (fwdProto ? fwdProto + ':' : 'https:');
+      } else {
+        ok = u.protocol === 'http:' && u.host.toLowerCase() === String(req.headers.host || '').toLowerCase();
+      }
     } catch { /* malformed */ }
     if (!ok) return res.status(403).json({ error: 'cross_origin', message: 'writes must be same-origin' });
   }

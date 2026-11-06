@@ -13,6 +13,7 @@ services:
       PORT: "7100"
       IPBLAB_BIND: 0.0.0.0
       IPB_LAB_MODE: ${IPB_LAB_MODE:-mock}
+      LAB_ALLOWED_HOSTS: ${LAB_ALLOWED_HOSTS:-intent-purpose-behaviour-lab.local.ping-devops.com}
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
