@@ -5,11 +5,13 @@ import { startHttpServer, createApp } from './app.js';
 import { allPassed, runChecks } from './doctor.js';
 import { assertBindAllowed, bindHost, resolvePort } from './safety.js';
 import { modeFrom } from './config.js';
-
-installNetguard(); // before anything else can open a socket
+import { aiGuardConfig } from './aiguardProbe.js';
 
 // The one shared settings file (rulebook): ~/Development/.env, or the path in STANDALONE_ENV. Optional; values are never printed.
 try { process.loadEnvFile(process.env.STANDALONE_ENV || path.join(os.homedir(), 'Development', '.env')); } catch { /* no settings file */ }
+
+// Real mode's ONE allowed outbound is the AI Gateway hostname from the settings; everything else is refused.
+installNetguard(aiGuardConfig().host ? [aiGuardConfig().host] : []);
 
 const checks = await runChecks();
 if (!allPassed(checks)) {

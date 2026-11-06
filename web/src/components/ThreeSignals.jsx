@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { postJson } from "../api";
 import { visible } from "../safeText";
 import { ClaimTag, ConsoleConfig, Hops, STATE, Verdict } from "./Bits";
+import PrivilegeCheck from "./PrivilegeCheck";
 import Json from "./Json";
 import PolicyEditor from "./PolicyEditor";
 
@@ -130,6 +131,7 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
           </div>
           <Tiers result={view} />
           <Verdict result={view} />
+          <PrivilegeCheck call={view.call} />
           {!customResult?.ok && <p className="muted">With the default policy this call is expected to be: <b>{sc.expected}</b>.</p>}
           {result && !customResult?.ok && <Hops hops={result.hops} traceId={result.traceId} />}
         </>

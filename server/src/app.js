@@ -28,6 +28,7 @@ import { formatTraceparent, newTrace } from './trace.js';
 import { maskDeep, maskFlow } from './mask.js';
 import { buildMethodTable, charsetProblem, isPageAddress, methodNotAllowed } from './shared/hygiene.js';
 import { shelfInfo } from './shelfLink.js';
+import { aiGuardConfig, sendToAiGuard } from './aiguardProbe.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = process.env.WEB_DIST || path.resolve(HERE, '../../web/dist');
@@ -183,6 +184,23 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
 
   api.get('/runs', workspace, (req, res) => { noStore(res); return res.json(workspaces.runs(req.ws)); });
   // Reset clears this workspace's runs and its Live baseline only.
+  // Live Privilege check: send one text through the tenant's AI Guard and return the
+  // gateway's own decision. Refused with a clear 503 when Real mode is not configured.
+  api.post('/privilege-check', workspace, async (req, res, next) => {
+    try {
+      const cfg = aiGuardConfig();
+      if (!cfg.configured) return res.status(503).json({ error: 'privilege_not_configured', message: 'Real mode is not configured: set CENTRAL_AGENT_A2A_URL and CENTRAL_AGENT_A2A_BEARER in the shared settings file.' });
+      const text = typeof req.body?.text === 'string' ? req.body.text : '';
+      if (!text.trim()) return res.status(400).json({ error: 'bad_request', message: 'text is required' });
+      if (text.length > 4000) return res.status(400).json({ error: 'bad_request', message: 'text over the 4000-character gateway limit' });
+      const answer = await sendToAiGuard({ text, cfg, source: 'intent-purpose-behaviour-lab' });
+      return res.json({ workspace: req.ws, status: answer.status, mapped: answer.mapped, raw: answer.raw });
+    } catch (e) {
+      if (e?.name === 'TimeoutError' || /timeout/i.test(String(e?.message))) return res.status(504).json({ error: 'gateway_timeout', message: 'the gateway did not answer in time' });
+      return next(e);
+    }
+  });
+
   api.post('/reset', workspace, (req, res) => { noStore(res); workspaces.reset(req.ws); return res.json({ reset: 'ok', workspace: req.ws }); });
   api.use((_req, res) => fail(res, 404, 'not_found'));
   app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
