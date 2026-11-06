@@ -37,7 +37,7 @@ test('POST /api/reset confirms and refuses a cross-origin caller', async () => {
 
 test('GET /api/info and /api/story say what this is: simulated, release 2026-11-02, UNVERIFIED, every vertical', async () => {
   await withServer(async (url) => {
-    assert.deepEqual(await (await fetch(`${url}/api/info`)).json(), { mode: 'mock', modes: ['mock', 'live'], simulated: true, release: '2026-11-02', unverified: true });
+    assert.deepEqual(await (await fetch(`${url}/api/info`)).json(), { mode: 'mock', source: 'mock', realAvailable: true, realReason: null, modes: ['mock', 'live'], simulated: true, release: '2026-11-02', unverified: true });
     for (const v of ['finance', 'health', 'retail']) {
       const j = await (await fetch(`${url}/api/story?vertical=${v}`)).json();
       assert.equal(j.vertical, v);
@@ -49,6 +49,53 @@ test('GET /api/info and /api/story say what this is: simulated, release 2026-11-
       assert.ok(Object.keys(j.purposeProfile).join() === 'Statement,Methods,Targets,Apps,ArgPrefixes');
       assert.ok(Object.keys(j.intents['exfiltrate-data']).join() === 'Description,Exemplars,Twins,Patterns,Acts,Floor');
     }
+  });
+});
+
+// ---------------------------------------------------------------- Rule 19: the Mock/Real toggle
+test('POST /api/mode switches both directions and GET /api/info follows; both switch directions work', async () => {
+  await withServer(async (url) => {
+    const postMode = (source) => post(url, '/api/mode', { source });
+    assert.equal((await postMode('real')).status, 200);
+    let info = await (await fetch(`${url}/api/info`)).json();
+    assert.equal(info.source, 'real');
+    assert.equal(info.mode, 'live');
+    assert.equal(info.realAvailable, true);
+    assert.equal((await postMode('mock')).status, 200);
+    info = await (await fetch(`${url}/api/info`)).json();
+    assert.equal(info.source, 'mock');
+    assert.equal(info.mode, 'mock');
+    assert.equal(info.realAvailable, true);
+  });
+});
+
+test('POST /api/mode: the mode it sets is the mode the engine runs (an evaluate right after a switch answers in that mode)', async () => {
+  await withServer(async (url) => {
+    await post(url, '/api/mode', { source: 'real' });
+    const j = await (await post(url, '/api/evaluate', { mode: 'live', scenario: 'bulk-export', vertical: 'health' }, { 'x-workspace': 'w-mode' })).json();
+    assert.equal(j.mode, 'live');
+    assert.match(j.hops[1].request, /\(live, in process\)/);
+    await post(url, '/api/mode', { source: 'mock' });
+    const j2 = await (await post(url, '/api/evaluate', { mode: 'mock', scenario: 'bulk-export', vertical: 'health' }, { 'x-workspace': 'w-mode' })).json();
+    assert.equal(j2.mode, 'mock');
+  });
+});
+
+test('POST /api/mode refuses anything else: other values, extra fields, the old {mode} shape, no body', async () => {
+  await withServer(async (url) => {
+    for (const body of [{ source: 'demo' }, { source: 'live' }, { source: 1 }, { source: null }, { source: ['real'] }, {}, { source: 'mock', extra: 1 }, { mode: 'mock' }, []]) {
+      const r = await post(url, '/api/mode', body);
+      assert.equal(r.status, 400, JSON.stringify(body));
+    }
+    assert.equal((await fetch(`${url}/api/mode`, { method: 'POST', headers: { 'content-type': 'application/json', origin: url } })).status, 400);
+    assert.equal((await fetch(`${url}/api/mode`, { method: 'POST', headers: { 'content-type': 'application/json', origin: url }, body: 'not json' })).status, 400);
+    assert.equal((await (await fetch(`${url}/api/info`)).json()).source, 'mock', 'a refused switch leaves the mode unchanged');
+  });
+});
+
+test('POST /api/mode is same-origin like every write', async () => {
+  await withServer(async (url) => {
+    assert.equal((await post(url, '/api/mode', { source: 'real' }, { origin: 'https://evil.example' })).status, 403);
   });
 });
 

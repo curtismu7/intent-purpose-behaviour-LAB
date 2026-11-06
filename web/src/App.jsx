@@ -4,7 +4,7 @@ import Baseline from "./components/Baseline";
 import FlowTab from "./components/FlowTab";
 import DiagramTab from "./components/DiagramTab";
 import TalkTrack from "./components/TalkTrack";
-import { getJson, resetWorkspace } from "./api";
+import { getJson, postJson, resetWorkspace } from "./api";
 import ShelfLink from "./components/ShelfLink.jsx";
 
 export const TABS = [
@@ -60,7 +60,17 @@ export default function App() {
     window.addEventListener("hashchange", on);
     return () => window.removeEventListener("hashchange", on);
   }, []);
-  const setMode = (m) => { setModeState(m); try { window.localStorage.setItem(MODE_KEY, m); } catch { /* storage blocked */ } };
+  // Rule 19: the toggle asks the server to switch, then reloads the data this visit depends on.
+  // Real (the live engine) is always available in this lab, so neither button is ever disabled.
+  const setMode = (m) => {
+    postJson("/api/mode", { source: m === "live" ? "real" : "mock" }).then(({ ok, body }) => {
+      const next = ok && body?.mode ? body.mode : m;
+      setModeState(next);
+      try { window.localStorage.setItem(MODE_KEY, next); } catch { /* storage blocked */ }
+      setResetSignal((n) => n + 1);
+      getJson(`/api/story?vertical=${encodeURIComponent(vertical)}`).then((j) => { setStory(j); setPolicy((p) => p || structuredClone(j.policyDefaults)); setError(null); }, () => {});
+    }, () => { setError("the mode switch did not reach the server"); });
+  };
   const pickTheme = (next) => {
     try { if (next === "auto") localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, next); } catch { /* not remembered */ }
     setTheme(next);
@@ -114,7 +124,7 @@ export default function App() {
             <ShelfLink />
             <div className="seg" role="group" aria-label="Mode">
               <button type="button" aria-pressed={mode === "mock"} onClick={() => setMode("mock")} data-testid="mode-mock">Mock</button>
-              <button type="button" aria-pressed={mode === "live"} onClick={() => setMode("live")} data-testid="mode-live">Live</button>
+              <button type="button" aria-pressed={mode === "live"} onClick={() => setMode("live")} data-testid="mode-real">Real</button>
             </div>
             <span className="chip" data-testid="mode">Mode: {mode || "..."}{mode === "live" ? " (local engine, loopback)" : mode === "mock" ? " (tables)" : ""}</span>
             {!presenter && (

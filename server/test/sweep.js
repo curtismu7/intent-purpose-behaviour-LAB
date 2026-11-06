@@ -44,6 +44,7 @@ export const PLACES = (p, q) => {
     'idjag scenario': { method: 'POST', path: '/api/idjag', body: { mode: 'live', scenario: p } },
     'idjag vertical': { method: 'POST', path: '/api/idjag', body: { mode: 'mock', scenario: 'ok', vertical: p } },
     'reset body': { method: 'POST', path: '/api/reset', body: { [p]: p } },
+    'mode body': { method: 'POST', path: '/api/mode', body: { [p]: p } },
     'query story vertical': { method: 'GET', path: `/api/story?vertical=${q}` },
     'query diagram name': { method: 'GET', path: `/api/diagram?name=${q}&vertical=${q}` },
     'query baseline mode': { method: 'GET', path: `/api/baseline?mode=${q}&vertical=${q}` },

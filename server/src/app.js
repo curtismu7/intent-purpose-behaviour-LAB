@@ -40,6 +40,7 @@ export const ROUTES = {
   '/api/health': ['GET'],
   '/api/story': ['GET'], '/api/diagram': ['GET'], '/api/info': ['GET'], '/api/runs': ['GET'],
   '/api/baseline': ['GET', 'POST'],
+  '/api/mode': ['POST'],
   '/api/evaluate': ['POST'], '/api/obo': ['POST'], '/api/idjag': ['POST'], '/api/reset': ['POST'],
 };
 const METHODS = buildMethodTable(ROUTES);
@@ -79,7 +80,27 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
   // customer.config.json is read on every request so editing it shows up on reload.
   api.get('/story', (req, res) => { noStore(res); res.json(buildStory(castFor(req), verticalOf(req))); });
   api.get('/diagram', (req, res) => { noStore(res); res.json(buildDiagram(castFor(req), DIAGRAM_NAMES.includes(req.query.name) ? req.query.name : 'three-signals')); });
-  api.get('/info', (_req, res) => { noStore(res); res.json({ mode: defaultMode(), modes: ['mock', 'live'], simulated: true, release: '2026-11-02', unverified: true }); });
+  // Rule 19: the mode is server-side and runtime-switchable. Default is IPB_LAB_MODE (mock unless configured); the header
+  // toggle switches it per visit with POST /api/mode. Both modes are loopback-only with zero outbound calls, so Real
+  // ("live", the real in-process engine) is always available here — no live tenant is needed.
+  let runtimeMode = defaultMode();
+  const modeView = () => ({
+    mode: runtimeMode,
+    source: runtimeMode === 'mock' ? 'mock' : 'real',
+    realAvailable: true,
+    realReason: null,
+    modes: ['mock', 'live'],
+    simulated: true, release: '2026-11-02', unverified: true,
+  });
+  api.get('/info', (_req, res) => { noStore(res); res.json(modeView()); });
+  api.post('/mode', (req, res) => {
+    noStore(res);
+    const body = req.body;
+    if (body === null || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some((k) => k !== 'source')) return res.status(400).json({ error: 'bad_request' });
+    if (body.source !== 'mock' && body.source !== 'real') return res.status(400).json({ error: 'bad_source' });
+    runtimeMode = body.source === 'real' ? 'live' : 'mock';
+    return res.json(modeView());
+  });
 
   // 5. The workspace id: refused BEFORE any slot exists (slots are created only by workspaces.record / baseline, inside a handler that runs after this).
   //    The refused id is not echoed anywhere.

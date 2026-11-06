@@ -46,7 +46,7 @@ test('over HTTP: info, health, diagram, story, runs and reset answers are what t
     assert.deepEqual(await get('/api/story?vertical=finance'), JSON.parse(JSON.stringify(buildStory(cast, 'finance'))));
     assert.deepEqual(await get('/api/diagram?name=three-signals&vertical=finance'), JSON.parse(JSON.stringify(buildDiagram(cast, 'three-signals'))));
     const info = await get('/api/info');
-    assert.deepEqual(Object.keys(info).sort(), ['mode', 'modes', 'release', 'simulated', 'unverified']);
+    assert.deepEqual(Object.keys(info).sort(), ['mode', 'modes', 'realAvailable', 'realReason', 'release', 'simulated', 'source', 'unverified']);
     assert.equal(info.release, '2026-11-02');
     assert.deepEqual(await get('/api/runs'), { workspace: 'w-0123456789abcdef', runs: [] });
   });

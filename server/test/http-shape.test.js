@@ -63,6 +63,7 @@ test('a wrong method on a known route is 405 with Allow; an unknown API path is 
     const cases = [
       ['GET', '/api/evaluate', 'POST'], ['PUT', '/api/evaluate', 'POST'], ['DELETE', '/api/evaluate', 'POST'], ['GET', '/api/obo', 'POST'], ['GET', '/api/idjag', 'POST'], ['GET', '/api/reset', 'POST'],
       ['POST', '/api/story', 'GET, HEAD'], ['POST', '/api/diagram', 'GET, HEAD'], ['POST', '/api/info', 'GET, HEAD'], ['DELETE', '/api/runs', 'GET, HEAD'], ['POST', '/api/runs', 'GET, HEAD'],
+      ['GET', '/api/mode', 'POST'], ['DELETE', '/api/mode', 'POST'], ['PUT', '/api/mode', 'POST'],
       ['PUT', '/api/baseline', 'GET, HEAD, POST'], ['DELETE', '/api/baseline', 'GET, HEAD, POST'], ['POST', '/api/health', 'GET, HEAD'], ['POST', '/', 'GET, HEAD'], ['DELETE', '/', 'GET, HEAD'],
     ];
     for (const [m, p, allow] of cases) {

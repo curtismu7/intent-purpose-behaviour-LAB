@@ -97,7 +97,7 @@ test('415: any charset but utf-8 is a fixed body, the value is never answered an
 test('405 comes from one route table: every route answers its listed methods and refuses the others with the sorted Allow list', async () => {
   const expectedAllow = (methods) => [...new Set(methods.flatMap((m) => (m === 'GET' ? ['GET', 'HEAD'] : [m])))].sort().join(', ');
   await serve(async (base) => {
-    assert.equal(Object.keys(ROUTES).length, 12);
+    assert.equal(Object.keys(ROUTES).length, 13);
     for (const [route, methods] of Object.entries(ROUTES)) {
       for (const m of methods) {
         const r = await send(base, m, route, { headers: json, body: m === 'GET' ? undefined : '{}' });

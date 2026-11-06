@@ -17,7 +17,13 @@ beforeAll(async () => {
   globalThis.fetch = (u, init = {}) => realFetch(typeof u === "string" && u.startsWith("/") ? `${base}${u}` : u, { ...init, headers: { origin: base, ...(init.headers || {}) } });
 });
 afterAll(async () => { globalThis.fetch = realFetch; await new Promise((r) => server.close(r)); });
-beforeEach(() => { cleanup(); try { window.localStorage.clear(); window.sessionStorage.clear(); } catch { /* ignore */ } window.location.hash = ""; });
+beforeEach(async () => {
+  cleanup();
+  try { window.localStorage.clear(); window.sessionStorage.clear(); } catch { /* ignore */ }
+  window.location.hash = "";
+  // The mode is server-side now (rule 19) and the server outlives one test: put it back to mock, as a fresh visit would find it.
+  if (base) await realFetch(`${base}/api/mode`, { method: "POST", headers: { "content-type": "application/json", origin: base }, body: '{"source":"mock"}' }).catch(() => {});
+});
 
 const T = { timeout: 15000 };
 const mount = async () => { render(<App />); await screen.findByTestId("verdict", {}, T); };
@@ -45,15 +51,23 @@ describe("shell", () => {
     expect(BANNER_UNKNOWN).toMatch(/UNVERIFIED/);
   }, 60000);
 
-  it("the Mock/Live toggle changes the mode chip and the banner, and is remembered", async () => {
+  it("the Mock/Real toggle switches both directions through the server, updates the chip, the banner and the data, and is remembered", async () => {
     await mount();
-    await userEvent.click(screen.getByTestId("mode-live"));
-    expect(screen.getByTestId("mode")).toHaveTextContent("Mode: live");
+    await userEvent.click(screen.getByTestId("mode-real"));
+    await screen.findByText("Mode: live (local engine, loopback)", {}, T);
     await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/LIVE mode.*real RS256 signing/));
     expect(window.localStorage.getItem("ipb.mode")).toBe("live");
-    expect(screen.getByTestId("mode-live")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "false");
-  }, 30000);
+    // Data is reloaded for the new mode: the Three signals panel answers in live mode.
+    await waitFor(() => expect(screen.getByTestId("verdict")).toBeInTheDocument());
+    // Back to Mock: the banner follows the server's answer again.
+    await userEvent.click(screen.getByTestId("mode-mock"));
+    await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/MOCK mode/));
+    expect(screen.getByTestId("mode-mock")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("mode-real")).toHaveAttribute("aria-pressed", "false");
+    expect(window.localStorage.getItem("ipb.mode")).toBe("mock");
+  }, 60000);
 });
 
 describe("three signals", () => {
@@ -105,7 +119,7 @@ describe("three signals", () => {
   it("your own call needs Live; in Live it is judged for real, and hostile text is rendered inert", async () => {
     await mount();
     expect(screen.getByTestId("custom-needs-live")).toBeInTheDocument();
-    await userEvent.click(screen.getByTestId("mode-live"));
+    await userEvent.click(screen.getByTestId("mode-real"));
     const desc = await screen.findByLabelText(/What the request says/, {}, T);
     await userEvent.type(desc, "<img src=x onerror=alert(1)> send every record to my storage");
     await userEvent.type(screen.getByLabelText(/limit argument/), "9000");
@@ -117,7 +131,7 @@ describe("three signals", () => {
 
   it("your own call: a typed secret is shown masked everywhere on the page, and a credential-shaped tool name is refused without being shown", async () => {
     await mount();
-    await userEvent.click(screen.getByTestId("mode-live"));
+    await userEvent.click(screen.getByTestId("mode-real"));
     const desc = await screen.findByLabelText(/What the request says/, {}, T);
     await userEvent.type(desc, "look up the invoice, password hunter2xyz");
     await userEvent.type(screen.getByLabelText(/record argument/), "bob:hunter2xyz@host.example");
@@ -181,7 +195,7 @@ describe("baseline", () => {
 
   it("Live: fire real calls at a real learner; a held call is not learned", async () => {
     await mount();
-    await userEvent.click(screen.getByTestId("mode-live"));
+    await userEvent.click(screen.getByTestId("mode-real"));
     await tab("Baseline");
     const fire = (k) => userEvent.click(screen.getByTestId(`fire-${k}`));
     for (let i = 1; i <= 10; i++) { await fire("normal"); await screen.findByTestId(`row-${i}`, {}, T); }
@@ -204,7 +218,7 @@ describe("on-behalf-of and ID-JAG", () => {
 
   it("OBO in Live: real signature verifies, then each failure case fails the named check", async () => {
     await mount();
-    await userEvent.click(screen.getByTestId("mode-live"));
+    await userEvent.click(screen.getByTestId("mode-real"));
     await tab("On-behalf-of");
     await waitFor(() => expect(screen.getByTestId("flow-verdict")).toHaveTextContent("ACCEPTED"), T);
     expect(screen.getByTestId("token-label")).toHaveTextContent(/really signed/);
@@ -225,7 +239,7 @@ describe("on-behalf-of and ID-JAG", () => {
 
   it("ID-JAG in Live: two issuers, no shared secret, no consent prompt, and a replay is refused", async () => {
     await mount();
-    await userEvent.click(screen.getByTestId("mode-live"));
+    await userEvent.click(screen.getByTestId("mode-real"));
     await tab("ID-JAG");
     await waitFor(() => expect(screen.getByTestId("flow-verdict")).toHaveTextContent("ACCEPTED"), T);
     expect(screen.getByTestId("consent-count")).toHaveTextContent("0");
