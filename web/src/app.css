@@ -102,3 +102,6 @@ summary { cursor: pointer; font-weight: 700; font-size: 14px; }
 .pat-elabel[data-dim="true"] { opacity: 0.55; }
 @media (max-width: 900px) { .pat-canvas { height: 520px; } }
 @media (max-width: 600px) { .head__title { font-size: 18px; } .pat-canvas { height: 480px; } .panel { padding: 10px; } }
+
+.shell-theme { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); }
+.shell-theme select { min-height: 32px; padding: 4px 8px; }
