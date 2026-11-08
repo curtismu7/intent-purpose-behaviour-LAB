@@ -247,3 +247,18 @@ test('a non-string vertical (object, array, number) falls back to the default an
     for (const scenario of [{ toString: 1 }, ['legit-lookup'], '__proto__']) assert.equal((await post(url, '/api/evaluate', { mode: 'mock', scenario })).status, 400);
   });
 });
+
+test('GET /api/shelf is reachable with no web build: returns the SHELF_URL (trailing slash trimmed); POST is not 200', async () => {
+  const before = process.env.SHELF_URL;
+  process.env.SHELF_URL = 'https://shelf.example:8443/';
+  try {
+    await withServer(async (url) => {
+      const r = await fetch(`${url}/api/shelf`);
+      assert.equal(r.status, 200);
+      assert.deepEqual(await r.json(), { shelfUrl: 'https://shelf.example:8443' });
+      assert.notEqual((await post(url, '/api/shelf', {})).status, 200);
+    }, { webDist: '/nonexistent/web-dist' });
+  } finally {
+    if (before === undefined) delete process.env.SHELF_URL; else process.env.SHELF_URL = before;
+  }
+});
