@@ -5,6 +5,7 @@ import { ClaimTag, ConsoleConfig, Hops, STATE, Verdict } from "./Bits";
 import PrivilegeCheck from "./PrivilegeCheck";
 import Json from "./Json";
 import PolicyEditor from "./PolicyEditor";
+import GatewayTrace from "../gateway-trace/GatewayTrace";
 
 const bar = (v) => `${Math.round(v * 100)}%`;
 const PHASE_TEXT = {
@@ -131,6 +132,8 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
           </div>
           <Tiers result={view} />
           <Verdict result={view} />
+          {/* The lab's own simulated gateway in BOTH modes (Live is a local engine, no tenant), so the panel is always the simulated one. */}
+          {view.trace && <GatewayTrace exchanges={[{ step: 1, title: "Gateway check: the agent's call", status: view.trace.response.status, trace: view.trace }]} source="mock" />}
           <PrivilegeCheck call={view.call} />
           {!customResult?.ok && <p className="muted">With the default policy this call is expected to be: <b>{sc.expected}</b>.</p>}
           {result && !customResult?.ok && <Hops hops={result.hops} traceId={result.traceId} />}

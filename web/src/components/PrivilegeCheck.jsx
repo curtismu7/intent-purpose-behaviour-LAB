@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { postJson } from "../api";
 import Json from "./Json";
+import GatewayTrace from "../gateway-trace/GatewayTrace";
 
 // Live Privilege check: sends the call's text through the tenant's AI Guard
 // (Real-mode outbound) and shows the gateway's own verdict. The gateway's
@@ -14,9 +15,10 @@ export default function PrivilegeCheck({ call }) {
     setState({ phase: "running" });
     postJson("/api/privilege-check", { text }).then(({ ok, body }) => {
       if (ok) setState({ phase: "done", result: body });
-      else setState({ phase: "error", message: body?.message || body?.error || "request failed" });
+      else setState({ phase: "error", message: body?.message || body?.error || "request failed", trace: body?.trace });
     }, () => setState({ phase: "error", message: "request failed" }));
   };
+  const trace = state.phase === "done" ? state.result?.trace : state.phase === "error" ? state.trace : null;
   const D = state.result?.mapped?.decision;
   const cls = D === "deny" ? "pc--deny" : D === "allow" ? "pc--allow" : "";
   return (
@@ -35,6 +37,8 @@ export default function PrivilegeCheck({ call }) {
         </div>
       )}
       {state.phase === "error" && <div className="pc__result pc--warn" role="alert"><strong>Could not reach the gateway</strong><p>{state.message}</p></div>}
+      {/* Only after the owner has run the real call: nothing is shown before there is a real exchange to show. */}
+      {trace && <GatewayTrace exchanges={[{ step: 2, title: "Live AI Guard check: message/send", status: trace.response?.status ?? null, trace }]} source="real" title="What Privilege did: the live AI Guard" />}
     </div>
   );
 }

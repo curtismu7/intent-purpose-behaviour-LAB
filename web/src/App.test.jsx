@@ -303,6 +303,55 @@ describe("reset and talk track", () => {
   }, 30000);
 });
 
+describe("What Privilege did (shared gateway-trace panel)", () => {
+  it("Run shows the panel under the result: simulated, one exchange, the decisions in decide()'s order, and a refusal says where", async () => {
+    await mount();
+    const panel = await screen.findByTestId("gateway-trace", {}, T);
+    expect(screen.getByTestId("verdict").compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy(); // under the result
+    expect(screen.getByTestId("gateway-trace-basis")).toHaveTextContent(/Simulated/);
+    await userEvent.click(screen.getByTestId("sc-bulk-export"));
+    await waitFor(() => expect(screen.getByTestId("trace-1")).toHaveTextContent(/refused at: Intent: deterministic patterns/), T);
+    const list = within(screen.getByTestId("trace-1-decisions"));
+    expect(list.getAllByRole("listitem").map((li) => li.querySelector("strong").textContent)).toEqual([
+      "Intent: deterministic patterns", "Purpose: inside the declared profile", "Intent: similarity to a risky intent", "Behaviour: departure from this agent's normal"]);
+    expect(screen.getByTestId("trace-1")).toHaveTextContent("HTTP 403");
+  }, 60000);
+
+  it("Live is the local engine, so the panel still says simulated (never 'Real gateway'), and the real AI Guard panel is absent until that call is run", async () => {
+    await mount();
+    await userEvent.selectOptions(screen.getByTestId("mode-select"), "real");
+    await screen.findByText("Mode: live (local engine, loopback)", {}, T);
+    await waitFor(() => expect(screen.getByTestId("gateway-trace-basis")).toHaveTextContent(/Simulated/), T);
+    expect(screen.getAllByTestId("gateway-trace")).toHaveLength(1);
+    expect(screen.queryByText(/Real gateway/)).toBeNull();
+  }, 60000);
+
+  it("after the real AI Guard call a second panel shows that exchange as real, with no bearer anywhere on the page", async () => {
+    const bearer = ["SECRET", "BEARER1234"].join("");
+    const saved = [process.env.CENTRAL_AGENT_A2A_URL, process.env.CENTRAL_AGENT_A2A_BEARER];
+    process.env.CENTRAL_AGENT_A2A_URL = "https://aigw.example.invalid/a2a";
+    process.env.CENTRAL_AGENT_A2A_BEARER = bearer;
+    const before = globalThis.fetch;
+    globalThis.fetch = (u, init) => (String(u).includes("aigw.example.invalid")
+      ? Promise.resolve(new Response(JSON.stringify({ jsonrpc: "2.0", id: "x", error: { code: -32600, message: "request blocked by security policy" } }), { status: 200 }))
+      : before(u, init));
+    try {
+      await mount();
+      expect(screen.getAllByTestId("gateway-trace")).toHaveLength(1);
+      await userEvent.click(screen.getByRole("button", { name: /Run the same call through live Privilege/ }));
+      await screen.findByTestId("trace-2", {}, T);
+      const panels = screen.getAllByTestId("gateway-trace");
+      expect(panels).toHaveLength(2);
+      expect(within(panels[1]).getByTestId("gateway-trace-basis")).toHaveTextContent(/Real gateway/);
+      expect(screen.getByTestId("trace-2")).toHaveTextContent(/refused at/);
+      expect(document.body.textContent).not.toContain(bearer);
+    } finally {
+      globalThis.fetch = before;
+      ["CENTRAL_AGENT_A2A_URL", "CENTRAL_AGENT_A2A_BEARER"].forEach((k, i) => { if (saved[i] === undefined) delete process.env[k]; else process.env[k] = saved[i]; });
+    }
+  }, 60000);
+});
+
 describe("safeText", () => {
   it("shows control and bidi characters as visible escapes", () => {
     expect(visible("a‮b\u0007c")).toBe("a\\u202eb\\u0007c");
