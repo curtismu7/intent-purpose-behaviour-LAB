@@ -1,9 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import "./components/JsonPane.css";
 import App from "./App.jsx";
-import { visible } from "./safeText.js";
-// Rule 24: JsonView uses the lab's visible() guard for strings in both modes.
-window.__safeTextVisible = visible;
 import "./styles/standalone-ui.css";
 import "./top-menu/top-menu.css";
 import "./app.css";
