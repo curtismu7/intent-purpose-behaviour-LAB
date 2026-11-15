@@ -50,6 +50,10 @@ export function mapGatewayAnswer({ body, status, sentText }) {
   return null;
 }
 
+// The few response headers worth showing (an allowlist: a gateway can set cookies or echo credentials in others).
+const SHOWN_HEADERS = ['content-type', 'x-request-id', 'request-id', 'x-correlation-id'];
+const pickHeaders = (h) => Object.fromEntries(SHOWN_HEADERS.map((k) => [k, h?.get?.(k)]).filter(([, v]) => v));
+
 // ---- The outbound call --------------------------------------------------------------------------------------------
 // fetchFn is injectable for tests. The URL is built ONLY from the configured endpoint, never from input.
 export async function sendToAiGuard({ text, cfg, fetchFn = fetch, timeoutMs = 30000, source = 'lab' }) {
@@ -64,17 +68,26 @@ export async function sendToAiGuard({ text, cfg, fetchFn = fetch, timeoutMs = 30
       message: { messageId: `${id}-m`, role: 'user', parts: [{ kind: 'text', text: trimmed }] },
     },
   };
-  const response = await fetchFn(jsonRpcUrl(cfg.url), {
-    method: 'POST',
-    signal: AbortSignal.timeout(timeoutMs),
-    headers: { 'content-type': 'application/json', ...(cfg.bearer ? { authorization: `Bearer ${cfg.bearer}` } : {}) },
-    body: JSON.stringify(body),
-  });
+  const sent = { url: jsonRpcUrl(cfg.url), body }; // what the "What Privilege did" trace shows as the request (the bearer is never part of it)
+  let response;
+  try {
+    response = await fetchFn(sent.url, {
+      method: 'POST',
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { 'content-type': 'application/json', ...(cfg.bearer ? { authorization: `Bearer ${cfg.bearer}` } : {}) },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    if (e && typeof e === 'object') e.sent = sent;
+    throw e;
+  }
   const raw = await response.text();
   let parsed = null;
   try { parsed = JSON.parse(raw); } catch { /* non-JSON */ }
   return {
     status: response.status,
+    headers: pickHeaders(response.headers),
+    sent,
     body: parsed,
     raw: raw.slice(0, 2000),
     mapped: parsed ? mapGatewayAnswer({ body: parsed, status: response.status, sentText: trimmed }) : null,

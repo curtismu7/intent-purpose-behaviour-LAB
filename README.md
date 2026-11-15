@@ -22,6 +22,7 @@ What it shows:
 4. **ID-JAG.** Two issuers: the user's IdP issues an identity assertion grant, the gateway redeems it at the partner app's own issuer. The deck claims no shared credential and no re-consent; the lab models neither a consent step nor client authentication on the redeem leg, so it cannot demonstrate that claim, and its panel says what the mock does rather than proving it. (The standalone walkthrough is the sibling `id-jag-standalone-LAB`; this lab does not import from it.)
 5. **Diagram.** ReactFlow, drawn from diagram-studio/1 data loaded by name: movable boxes, Simulate, speed, Reset (restores box positions).
 6. **Talk track.** Also in `docs/talk-track.md`.
+7. **What Privilege did.** Under each result, the shared trace panel shows the exact request, the exact response and the decisions in between. For the lab's own simulated gateway every decision is one the engine really computed ("checked"); for the real AI Guard call (Real mode, owner-run) the gateway reports no per-check detail, so decisions are only "inferred" or "observed".
 
 Field names for intents (`AIIntent`), purpose (`PurposeProfile`), behaviour (`BehaviourConfig`) and on-behalf-of (`OBO`, with `Redeem` as the ID-JAG second leg) come from the Privilege console swagger of 2026-10-31. That is schema only: it proves the names exist, not how the product behaves. Everything else (the pattern syntax, the similarity stand-in, the scoring points, the reason codes, the alert and ask thresholds, the refusal switches) is lab-invented and tagged "lab-invented" in the policy editor.
 
