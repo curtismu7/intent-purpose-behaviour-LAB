@@ -122,7 +122,7 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
         <>
           <div className="panel call" data-testid="call-panel">
             <h3>{customResult?.ok ? "Your own call" : "The call"} <span className="muted">from agent key <code>{visible(view.agent)}</code></span></h3>
-            <Json value={view.call} label="call" testId="call-json" />
+            <Json value={view.call} label="call" testId="call-json" hot={["tool", "args"]} />
           </div>
           <div className="gate" data-testid="signals">
             <IntentPanel s={view.signals} claim={story.claimLabel} />

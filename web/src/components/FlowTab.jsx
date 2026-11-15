@@ -48,7 +48,7 @@ function Result({ kind, r }) {
           </section>
         </>
       )}
-      {r.jwks && <details><summary>Public key set(s) the verifier used (JWKS, public keys only)</summary><Json value={r.jwks} label="jwks" /></details>}
+      {r.jwks && <details><summary>Public key set(s) the verifier used (JWKS, public keys only)</summary><Json value={r.jwks} label="jwks" hot={["kid"]} /></details>}
       <ConsoleConfig title="OBO config (the exchange and its Redeem leg)" value={r.config} source="Field names from the console swagger, 2026-10-31 (schema only; behaviour not tested on our tenant). Resource (RFC 8707) is the exchanged token's aud. Redeem is the ID-JAG second leg. AuthMethod is shown for shape only: the lab runs no client authentication on either leg, so it is NOT EXERCISED. ClientSecret and PrivateKeyPEM exist in the schema and are write-only; the lab holds none." />
       <Hops hops={r.hops} traceId={r.traceId} />
     </div>

@@ -8,6 +8,7 @@ import { createHealth } from "../../server/src/health.js";
 import App, { BANNER_UNKNOWN, TABS } from "./App";
 import { labelOffsets } from "./components/PatternDiagram";
 import { visible } from "./safeText";
+import { setJsonView } from "./components/JsonPane";
 
 let server; let base; const realFetch = globalThis.fetch;
 beforeAll(async () => {
@@ -19,6 +20,7 @@ beforeAll(async () => {
 afterAll(async () => { globalThis.fetch = realFetch; await new Promise((r) => server.close(r)); });
 beforeEach(async () => {
   cleanup();
+  setJsonView("raw"); // the Form | JSON choice is shared module state: these tests read the JSON text
   try { window.localStorage.clear(); window.sessionStorage.clear(); } catch { /* ignore */ }
   window.location.hash = "";
   // The mode is server-side now (rule 19) and the server outlives one test: put it back to mock, as a fresh visit would find it.
@@ -205,6 +207,18 @@ describe("baseline", () => {
 });
 
 describe("on-behalf-of and ID-JAG", () => {
+  it("a decoded token pane offers Form | JSON and stands the lab's own keys out in both views", async () => {
+    await mount();
+    await tab("On-behalf-of");
+    const decoded = within(await screen.findByTestId("tok-exchanged", {}, T)).getByRole("group", { name: /decoded view$/ });
+    expect(within(decoded).getByRole("button", { name: "Form" })).toBeInTheDocument();
+    expect(within(decoded).getByRole("button", { name: "JSON" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(within(decoded).getByRole("button", { name: "Form" }));
+    const pane = decoded.parentElement.querySelector(".json--form");
+    const hotKeys = [...pane.querySelectorAll('.jform__row[data-hot="true"] > .jform__k')].map((n) => n.textContent);
+    expect(hotKeys).toEqual(expect.arrayContaining(["act", "aud", "jti", "kid"]));
+  }, 60000);
+
   it("OBO in Mock: tokens are shown raw and labelled mock, with a placeholder signature", async () => {
     await mount();
     await tab("On-behalf-of");

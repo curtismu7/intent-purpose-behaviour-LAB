@@ -51,7 +51,7 @@ export function Token({ title, tok, label, testId }) {
       <summary>{title}</summary>
       <p className="muted">{label}</p>
       <Json value={tok.token} label={`${title} raw`} />
-      <Json value={{ header: tok.header, claims: tok.claims }} label={`${title} decoded`} />
+      <Json value={{ header: tok.header, claims: tok.claims }} label={`${title} decoded`} hot={["kid", "jti"]} />
     </details>
   );
 }
@@ -76,7 +76,7 @@ export function ConsoleConfig({ title, value, source }) {
     <details className="cfg" data-testid="console-config">
       <summary>{title} <span className="tag" data-state="ok">console swagger names</span></summary>
       <p className="muted">{source}</p>
-      <Json value={value} label={title} />
+      <Json value={value} label={title} hot={["Resource", "Scope"]} />
     </details>
   );
 }
