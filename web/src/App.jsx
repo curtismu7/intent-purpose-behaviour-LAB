@@ -8,6 +8,7 @@ import TalkTrack from "./components/TalkTrack";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu";
 import { getJson, postJson, resetWorkspace } from "./api";
 import ShelfLink from "./components/ShelfLink.jsx";
+import VerifyMark from "./components/VerifyMark.jsx";
 
 const LAB_VERSION = (() => { try { return JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version || null; } catch { return null; } })();
 
@@ -137,6 +138,7 @@ export default function App() {
               onReset={reset}
             >
               <ShelfLink />
+              <VerifyMark id="intent-purpose-behaviour-lab" />
             </TopMenu>
             <span className="chip" data-testid="mode">Mode: {mode || "..."}{mode === "live" ? " (local engine, loopback)" : mode === "mock" ? " (tables)" : ""}</span>
           </div>
