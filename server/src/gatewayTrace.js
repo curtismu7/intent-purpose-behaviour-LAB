@@ -27,12 +27,15 @@ export function bearerForDisplay(bearer, resolve = (b) => b) {
 
 // `extra` adds or replaces request headers a lab really sends (accept, traceparent, a session header, ...). Names are matched
 // case-insensitively, so { Accept: 'application/json' } replaces the default accept rather than sitting beside it.
+// A value of null REMOVES that header: for a lab that does not send one of the defaults (no accept, say), so the trace never shows
+// a header the lab did not send. undefined is ignored (the default stays).
 // Only put headers in `extra` that are safe to show: never a key, a token or a cookie (assertTrace catches a full bearer token).
 export const sentHeaders = (authorization, extra) => {
   const out = { authorization, 'content-type': 'application/json', accept: 'application/json, text/event-stream' };
   for (const [name, value] of Object.entries(extra || {})) {
+    if (value === undefined) continue;
     for (const have of Object.keys(out)) if (have.toLowerCase() === name.toLowerCase()) delete out[have];
-    out[name] = value;
+    if (value !== null) out[name] = value;
   }
   return out;
 };
