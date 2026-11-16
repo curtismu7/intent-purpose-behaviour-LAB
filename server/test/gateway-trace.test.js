@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { assertTrace } from '../src/gatewayTrace.js';
-import { aiGuardFailure, evaluateTrace } from '../src/gatewayExchanges.js';
+import { aiGuardFailure, aiGuardTrace, evaluateTrace } from '../src/gatewayExchanges.js';
 import { SCENARIOS } from '../src/data.js';
 import { post, withServer } from './helpers.js';
 
@@ -23,6 +23,9 @@ test('every scripted call, in Mock and in Live, gets a simulated trace: mock sou
       assert.ok(t.decisions.every((d) => d.basis === 'checked'));
       assert.ok(new URL(t.request.url).hostname.endsWith('.invalid'));
       assert.equal(t.response.status, body.blocked ? 403 : body.heldForPerson ? 202 : 200);
+      // exactly the headers the lab models: no default accept, and the traceparent that went with the call
+      assert.deepEqual(Object.keys(t.request.headers).sort(), ['authorization', 'content-type', 'traceparent']);
+      assert.match(t.request.headers.traceparent, /^00-[0-9a-f]{32}-[0-9a-f]{16}-0[01]$/);
       assert.equal(t.response.body.decision, body.decision);
       // a refusal in the verdict is a failed decision, and only the deterministic ones can fail
       const failed = t.decisions.filter((d) => d.outcome === 'fail').map((d) => d.id);
@@ -124,6 +127,11 @@ test('real hop: allow, block and redact answers each get a real trace: nothing c
         assert.ok(!JSON.stringify(t).includes(BEARER), c.name); // ... and is nowhere in the trace, even when the gateway echoes it in its own answer
         assert.ok(!JSON.stringify({ ...body, raw: undefined }).includes(BEARER), c.name);
         assert.equal(t.response.headers['set-cookie'], undefined, 'response headers are an allowlist');
+        assert.equal(t.request.headers.accept, undefined, 'sendToAiGuard sends no accept header');
+        if (c.name === 'allow') { // a 200 with a JSON-RPC error (block) has no grant decision: the shared builder reports it as 'result'
+          assert.equal(byId(t).grant.label, 'Access to AI Guard');
+          assert.ok(!/tool/i.test(`${byId(t).grant.label} ${byId(t).grant.evidence}`), 'an AI Guard inspection is not a tool call');
+        }
       });
     });
   }
@@ -136,6 +144,7 @@ test('real hop: a 401 is an inferred refusal, an answer of unknown shape is for 
       assert.deepEqual(assertTrace(body.trace), []);
       assert.equal(body.trace.response.status, 401);
       assert.deepEqual(body.trace.decisions.map((d) => [d.id, d.outcome, d.basis]), [['authenticated', 'fail', 'inferred'], ['grant', 'skipped', 'inferred'], ['verdict', 'info', 'observed']]);
+      assert.equal(byId(body.trace).grant.label, 'Access to AI Guard');
     });
   });
   await withFakeGateway(reply(200, { jsonrpc: '2.0', id: 'x', result: {} }), async () => {
@@ -164,7 +173,28 @@ test('the unit builders keep the honesty rule on their own: a real trace never s
   assert.deepEqual(assertTrace(t), []);
   assert.ok(!JSON.stringify(t).includes(BEARER));
   assert.equal(t.request.url, 'https://aigw.example.invalid/a2a/jsonrpc', 'the query string is never shown');
+  assert.deepEqual(Object.keys(t.request.headers).sort(), ['authorization', 'content-type'], 'the failure trace shows only what sendToAiGuard sends (no default accept)');
   const cast = { castHost: 'fabrikam' };
   const out = { call: { tool: 'a.b', args: {} }, reasons: [], signals: { intent: { deterministic: { matched: [] }, semantic: { riskScore: 0 } }, purpose: { declared: null } }, decision: 'allow', reasonCode: 'ALLOW', decidedBy: 'none', mode: 'live' };
   assert.deepEqual(assertTrace(evaluateTrace({ cast, out, traceparent: 'x' })), []);
+});
+
+test('AI Guard is not an MCP tool call: the grant decision names what was decided, in A2A wording, for a 200 and for a 403', () => {
+  const cfg = { bearer: BEARER };
+  const sent = { url: 'https://aigw.example.invalid/a2a/jsonrpc', body: { jsonrpc: '2.0', id: 'x', method: 'message/send', params: { message: { parts: [{ kind: 'text', text: 'hello' }] } } } };
+  const answer = (status, body) => ({ status, body, raw: JSON.stringify(body), headers: {}, sent, mapped: status === 200 ? { decision: 'allow', reasonCode: 'ALLOW', decidedBy: 'AI Guard' } : null });
+  const ok = aiGuardTrace({ cfg, answer: answer(200, { jsonrpc: '2.0', id: 'x', result: { status: { state: 'completed' } } }) });
+  const no = aiGuardTrace({ cfg, answer: answer(403, { error: 'forbidden' }) });
+  for (const t of [ok, no]) {
+    assert.deepEqual(assertTrace(t), []);
+    const g = byId(t).grant;
+    assert.equal(g.label, 'Access to AI Guard');
+    assert.equal(g.basis, 'inferred');
+    assert.ok(!/tool|grant allows/i.test(g.evidence), g.evidence);
+    assert.ok(!JSON.stringify(t).includes(BEARER));
+  }
+  assert.equal(byId(ok).grant.outcome, 'pass');
+  assert.match(byId(ok).grant.evidence, /AI Guard/);
+  assert.equal(byId(no).grant.outcome, 'fail');
+  assert.match(byId(no).grant.evidence, /AI Guard/);
 });

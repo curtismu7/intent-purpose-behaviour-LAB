@@ -39,6 +39,7 @@ export function evaluateTrace({ cast, out, traceparent }) {
   const trace = mockTrace({
     url: `https://mcp.${cast.castHost}.invalid/mcp`,
     authorization: 'Bearer <MOCK-ISSUED token>',
+    requestHeaders: { accept: null, traceparent }, // what the lab models: no accept, and the traceparent that went with the call
     rpc: out.call,
     status,
     headers: { 'x-decision': out.decision, 'x-reason': out.reasonCode, traceparent },
@@ -46,7 +47,6 @@ export function evaluateTrace({ cast, out, traceparent }) {
     decisions,
     record: `${where}, then decide() judged them under the policy sent with the request: decision=${out.decision} reason=${out.reasonCode}. This lab writes no log of its own.`,
   });
-  trace.request.headers = { authorization: trace.request.headers.authorization, 'content-type': 'application/json', traceparent }; // what the lab models, not the shared default
   return trace;
 }
 
@@ -60,6 +60,8 @@ const clean = (value, secret) => {
 };
 // The configured URL, without userinfo, query or fragment: only where the call went, never a credential carried in the address.
 const shownUrl = (url) => { try { const u = new URL(url); return `${u.origin}${u.pathname}`; } catch { return ''; } };
+// sendToAiGuard sends authorization and content-type only, so the shared default accept is removed from every trace of this hop.
+const SENT = { accept: null };
 const authorizationFor = (cfg) => bearerForDisplay('<the configured bearer>', () => cfg.bearer);
 
 // answer: what sendToAiGuard returned ({ status, body, raw, mapped, headers, sent }).
@@ -72,9 +74,15 @@ export function aiGuardTrace({ cfg, answer }) {
     status: answer.status,
     headers: clean(answer.headers, cfg.bearer),
     body: clean(answer.body ?? answer.raw, cfg.bearer),
+    requestHeaders: SENT,
     credential: 'workload-token', // the configured bearer is a token the gateway checks; the lab does not know which kind, so the wording stays generic
+    // an A2A message/send to AI Guard, not an MCP tool call: the default wording about tools would mislead. Outcomes are the shared ones.
+    grant: {
+      label: 'Access to AI Guard',
+      pass: 'the caller may send messages to AI Guard: it took the message and inspected it (what it decided is the verdict below)',
+      fail: 'the caller may not use AI Guard (the reply does not say which check refused it)',
+    },
   });
-  trace.request.headers = { authorization: trace.request.headers.authorization, 'content-type': 'application/json' }; // exactly what sendToAiGuard sends
   // The verdict is the lab's reading of the answer text (a block message, or a [REDACTED:...] marker): read from the response, never checked.
   trace.decisions.push(m
     ? { id: 'verdict', label: 'AI Guard verdict', outcome: m.decision === 'deny' ? 'fail' : 'pass', basis: 'observed', evidence: `${m.reasonCode}: ${m.decidedBy}. The lab reads this from the answer text, as measured on the live gateway; the gateway does not list which check fired.` }
@@ -84,5 +92,5 @@ export function aiGuardTrace({ cfg, answer }) {
 
 // The gateway could not be reached in time: a request, no response, one failed decision.
 export function aiGuardFailure({ cfg, sent, error }) {
-  return failureTrace({ url: shownUrl(sent.url), authorization: authorizationFor(cfg), rpc: clean(sent.body, cfg.bearer), error });
+  return failureTrace({ url: shownUrl(sent.url), authorization: authorizationFor(cfg), rpc: clean(sent.body, cfg.bearer), requestHeaders: SENT, error });
 }
