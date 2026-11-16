@@ -29,16 +29,26 @@ beforeEach(async () => {
 
 const T = { timeout: 15000 };
 const mount = async () => { render(<App />); await screen.findByTestId("verdict", {}, T); };
-const tab = (name) => userEvent.click(screen.getByRole("tab", { name }));
+const tab = (name) => userEvent.click(within(screen.getByRole("navigation", { name: "Lab sections" })).getByRole("link", { name }));
 
 describe("shell", () => {
   it("says it is simulated and UNVERIFIED on every tab, in presenter mode too, and shows the mode", async () => {
     await mount();
     expect(screen.getByTestId("banner")).toHaveTextContent(/UNVERIFIED on our tenant/);
     expect(screen.getByTestId("banner")).toHaveTextContent(/MOCK mode/);
-    expect(screen.getByTestId("mode")).toHaveTextContent("Mode: mock");
+    expect(screen.getByTestId("mode")).toHaveTextContent("Mock");
+    // Standard shell: the dark shell bar first, then <main> whose first child is the simulation banner.
+    const bar = document.querySelector("header.shell-bar");
+    expect(bar).not.toBeNull();
+    expect(bar.querySelector(".shell-brand h1")).toHaveTextContent("Intent Purpose Behaviour LAB");
+    expect(within(bar).getByTestId("mode")).toBeInTheDocument();
+    expect(within(bar).getByTestId("top-menu")).toHaveClass("shell-right");
+    expect(document.querySelector("main").firstElementChild).toBe(screen.getByTestId("banner"));
+    expect(bar.compareDocumentPosition(document.querySelector("main")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     for (const t of TABS) {
       await tab(t.label);
+      expect(within(screen.getByRole("navigation", { name: "Lab sections" })).getByRole("link", { name: t.label })).toHaveAttribute("aria-current", "page");
+      expect(document.querySelectorAll('.shell-nav [aria-current="page"]')).toHaveLength(1);
       expect(screen.getByTestId("banner")).toHaveTextContent(/UNVERIFIED on our tenant/);
     }
     await tab("Three signals");
@@ -56,7 +66,7 @@ describe("shell", () => {
   it("the Mock/Real toggle switches both directions through the server, updates the chip, the banner and the data, and is remembered", async () => {
     await mount();
     await userEvent.selectOptions(screen.getByTestId("mode-select"), "real");
-    await screen.findByText("Mode: live (local engine, loopback)", {}, T);
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("Live"), T);
     await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/LIVE mode.*real RS256 signing/));
     expect(window.localStorage.getItem("ipb.mode")).toBe("live");
     expect(screen.getByTestId("mode-select")).toHaveValue("real");
@@ -65,6 +75,7 @@ describe("shell", () => {
     // Back to Mock: the banner follows the server's answer again.
     await userEvent.selectOptions(screen.getByTestId("mode-select"), "mock");
     await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/MOCK mode/));
+    expect(screen.getByTestId("mode")).toHaveTextContent("Mock");
     expect(screen.getByTestId("mode-select")).toHaveValue("mock");
     expect(window.localStorage.getItem("ipb.mode")).toBe("mock");
   }, 60000);
@@ -320,7 +331,7 @@ describe("What Privilege did (shared gateway-trace panel)", () => {
   it("Live is the local engine, so the panel still says simulated (never 'Real gateway'), and the real AI Guard panel is absent until that call is run", async () => {
     await mount();
     await userEvent.selectOptions(screen.getByTestId("mode-select"), "real");
-    await screen.findByText("Mode: live (local engine, loopback)", {}, T);
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("Live"), T);
     await waitFor(() => expect(screen.getByTestId("gateway-trace-basis")).toHaveTextContent(/Simulated/), T);
     expect(screen.getAllByTestId("gateway-trace")).toHaveLength(1);
     expect(screen.queryByText(/Real gateway/)).toBeNull();

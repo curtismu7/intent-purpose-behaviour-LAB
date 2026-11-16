@@ -81,7 +81,7 @@ export default function Baseline({ story, mode, policy, resetSignal }) {
         <Timeline calls={calls} policy={policy} />
         {mode === "mock" ? (
           <div className="seg" role="group" aria-label="Scripted run">
-            <button type="button" onClick={() => setShown((n) => Math.min(n + 1, (mock || []).length))} disabled={!mock || shown >= mock.length} data-testid="next-call">Next scripted call</button>
+            <button type="button" className="primary" onClick={() => setShown((n) => Math.min(n + 1, (mock || []).length))} disabled={!mock || shown >= mock.length} data-testid="next-call">Next scripted call</button>
             <button type="button" onClick={() => setShown((mock || []).length)} disabled={!mock || shown >= mock.length} data-testid="play-all">Show all {mock ? mock.length : ""} calls</button>
             <button type="button" onClick={() => setShown(0)} data-testid="restart">Start again</button>
           </div>

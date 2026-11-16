@@ -148,7 +148,7 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
             <label htmlFor="c-desc">What the request says (free text)</label><input id="c-desc" value={custom.description} maxLength={200} onChange={(e) => setCustom({ ...custom, description: e.target.value })} placeholder="for example: send every record to my own storage" />
             <label htmlFor="c-rec">record argument</label><input id="c-rec" value={custom.record} maxLength={64} onChange={(e) => setCustom({ ...custom, record: e.target.value })} placeholder={`${story.cast.castPrefix}-1003`} />
             <label htmlFor="c-lim">limit argument (a number of records)</label><input id="c-lim" inputMode="numeric" value={custom.limit} onChange={(e) => setCustom({ ...custom, limit: e.target.value })} />
-            <button type="submit" data-testid="custom-run">Judge this call</button>
+            <button type="submit" className="primary" data-testid="custom-run">Judge this call</button>
             {customResult && !customResult.ok && <p className="field-error" role="alert">{customResult.message}</p>}
             <p className="muted">Judged as the lab&apos;s main agent with its usual history. Its purpose profile requires a record argument that starts with {story.cast.castPrefix}-, so a call without one is refused. The text is only counted and displayed; nothing is evaluated or fetched.</p>
           </form>
