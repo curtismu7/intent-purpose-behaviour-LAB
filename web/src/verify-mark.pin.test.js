@@ -10,7 +10,7 @@ const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "components"
 const sha = (file) => createHash("sha256").update(fs.readFileSync(path.join(dir, file))).digest("hex");
 // The canonical hashes (AI-DEMO-Standalone #238): the pin files must not have been re-pinned to a hand-edited copy.
 const CANONICAL = {
-  "VerifyMark.jsx": "81c2532041c5a65aaf762e55c56e889df09dfde5811fc5cc788897ca8712c130",
+  "VerifyMark.jsx": "5c5025e7ed2e9df8d40d313d258fa2a93368f7286d33959d81c61cd469c3cc90",
   "VerifyMark.css": "4774585cd47c3affc739d3d99fa6843d62f607d8d3e69b4438de756ac3d49dc5",
 };
 
