@@ -176,9 +176,11 @@ test('consoleSource: the request carries x-api-key / x-api-secret headers, maps 
       PRIVILEGE_API_KEY: 'k',
       PRIVILEGE_API_SECRET: 's',
       PRIVILEGE_CONSOLE_CA: path.join(here, 'fixtures', 'console-test-cert.pem'),
+      PRIVILEGE_DIAL_HOST: '127.0.0.1',
     };
     const r = await loadConsoleIntents(env);
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+    assert.equal(r.via, '127.0.0.1', 'the dial host is the one the owner set');
     assert.equal(r.intents.length, 1);
     assert.deepEqual(r.intents[0], { name: 'x_intent', description: 'd', exemplars: ['e'], twins: [], patterns: ['\\bx\\b'], acts: true, floor: 0 });
     assert.equal(seenHeaders['x-api-key'], 'k');
@@ -210,6 +212,7 @@ test('consoleSource: a wrong CA is a named cert_rejected refusal, never a silent
       PRIVILEGE_CONSOLE_URL: `https://local.procyon.ai:${server.address().port}`,
       PRIVILEGE_TENANT: 't', PRIVILEGE_API_KEY: 'k', PRIVILEGE_API_SECRET: 's',
       PRIVILEGE_CONSOLE_CA: path.join(here, 'fixtures', 'console-test-other-ca.pem'),
+      PRIVILEGE_DIAL_HOST: '127.0.0.1',
     };
     const r = await loadConsoleIntents(env);
     assert.equal(r.ok, false);

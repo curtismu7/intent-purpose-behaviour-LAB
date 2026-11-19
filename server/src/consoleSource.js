@@ -75,10 +75,12 @@ export async function loadConsoleIntents(env = process.env) {
   const port = u.port || 443;
   const path = `/api/${encodeURIComponent(cfg.tenant)}/v1/aiintents?ObjectMeta.Namespace=procyon`;
   const headers = { 'x-api-key': env.PRIVILEGE_API_KEY, 'x-api-secret': env.PRIVILEGE_API_SECRET, 'x-procyon-session-id': crypto.randomUUID(), accept: 'application/json' };
-  // The dial order: the console origin itself (works when this runs on the owner's Mac), then OrbStack's host
-  // loopback (works when this runs inside the lab's container on the same Mac). Both dial with the console's
-  // hostname as SNI and Host, and both are checked against the console's own CA and hostname.
-  const dials = [{ host: cfg.host, port }, ...(DIAL_DEFAULT !== cfg.host ? [{ host: DIAL_DEFAULT, port }] : [])];
+  // The dial order: PRIVILEGE_DIAL_HOST when the owner sets it (a CI or container name that reaches the same
+  // TLS endpoint), then the console origin itself (works when this runs on the owner's Mac), then OrbStack's
+  // host loopback (works inside the lab's container on the same Mac). All dial with the console's hostname as
+  // SNI and Host, and all are checked against the console's own CA and hostname.
+  const dialHosts = [...new Set([env.PRIVILEGE_DIAL_HOST || '', cfg.host, DIAL_DEFAULT].filter(Boolean))];
+  const dials = dialHosts.map((host) => ({ host, port }));
   let lastError = null;
   for (const dial of dials) {
     try {
