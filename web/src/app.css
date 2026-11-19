@@ -31,9 +31,13 @@ input[type="checkbox"] { width: 20px; height: 20px; min-height: 0; accent-color:
 .panel h3 { margin: 12px 0 4px; font-size: 15px; }
 .signals-tab, .baseline-tab, .flow-tab { display: grid; gap: 12px; min-width: 0; }
 .signals-tab > *, .baseline-tab > *, .flow-tab > * { min-width: 0; }
-.gate { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+.gate { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 .gate > * { min-width: 0; }
-.tiers { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.tiers { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { .gate, .tiers { grid-template-columns: minmax(0, 1fr); } }
+.step-num { display: inline-grid; place-items: center; min-width: 22px; height: 22px; border-radius: 999px;
+  background: var(--accent-gradient); color: var(--on-accent); font: 700 11px var(--font-mono);
+  margin-right: 8px; vertical-align: 2px; }
 .tiers .panel h3 { margin-top: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .muted { color: var(--muted); font-size: 13px; line-height: 1.45; }
@@ -137,10 +141,10 @@ summary { cursor: pointer; font-weight: 700; font-size: 14px; }
 .chiprow .chip { padding: 4px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
 .chiprow .chip:hover { background: var(--box-grey); }
 .chiprow .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
-.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 .intent-card { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 10px 12px; min-width: 0; }
 .intent-card .card__head { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font: inherit; color: var(--text); flex-wrap: wrap; }
 .intent-card .card__chev { margin-left: auto; font-weight: 700; }
 .intent-detail h4 { margin: 10px 0 2px; font-size: 13px; }
 .panel textarea { width: 100%; margin: 2px 0 8px; display: block; font: 13px var(--font-mono); }
-@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .cards { grid-template-columns: minmax(0, 1fr); } }
