@@ -7,3 +7,4 @@ coverage/
 .DS_Store
 .data/
 customer.config.json
+proxy-ca/
