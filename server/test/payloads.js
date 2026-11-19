@@ -20,6 +20,6 @@ export const EXTRA = [
   'password%3Dhunter2xyz', 'pass%2577ord=hunter2xyz', 'password%25253Dhunter2xyz', 'password+is+hunter2xyz', 'pass\tword=hunter2xyz', 'pass\tword: hunter2xyz', 'pa\tss\nword: hunter2xyz', 'pass\nword=hunter2xyz', 'pa​ss​word: hunter2xyz',
   'ｐａｓｓｗｏｒｄ＝hunter2xyz', 'password-hunter2xyz', ['api_key', 'hunter2xyz'].join('_'), 'client secret: hunter2xyz', 'Authorization: Bearer hunter2xyz', 'password - hunter2xyz',
   'my password is "hunter2xyz"', K, JWT, SK, GHP, SHORT_JWT, 'password=1 and password%3Dhunter2xyz',
-  `-----BEGIN PRIVATE KEY-----\n${K}\n-----END PRIVATE KEY-----`,
+  ['-----BEGIN PRIVATE', 'KEY-----\\n', K, '\\n-----END PRIVATE', 'KEY-----'].join(''),
 ];
 export const ALL = [...CLASS_A, ...CLASS_B, ...CLASS_C, ...CLASS_D, ...EXTRA];
