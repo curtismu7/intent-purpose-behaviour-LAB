@@ -1,0 +1,1582 @@
+{
+  "AIIntents": [
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "account_takeover",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Changing another principal's authentication or recovery path.",
+        "Exemplars": {
+          "Elems": [
+            "reset the password for another user",
+            "disable multi factor authentication on this account",
+            "change the recovery email for this user",
+            "add my device as a trusted factor for them",
+            "unlock the administrator account",
+            "set a new password for the service account",
+            "remove the second factor requirement",
+            "change the phone number on their profile",
+            "create a session as another user",
+            "impersonate this account",
+            "change the email address on somebody else's profile",
+            "alter another person's recovery contact"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "reset my own password",
+            "enrol a new factor on my account",
+            "update my own recovery email",
+            "unlock my account after too many attempts"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\bimpersonate\\b",
+            "\\b(disable|remove)\\b.*\\b(multi[_\\s-]?factor|mfa|2fa|second\\s+factor)\\b",
+            "\\b(reset|set|change|alter)\\b.*\\b(password|recovery|phone|email)\\b.*\\b(another|other|their|them|somebody|someone|service\\s+account)\\b",
+            "\\bsession\\s+as\\s+another\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "build_and_test",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Compiling, running tests, installing dependencies and cleaning build output. A sibling: these phrase like destruction and like arbitrary execution.",
+        "Exemplars": {
+          "Elems": [
+            "run the unit tests for this package",
+            "build the project and show me the errors",
+            "install the dependencies",
+            "clean the build directory and rebuild",
+            "run the linter and fix what it reports",
+            "start the dev server on port 3000",
+            "regenerate the protobuf bindings",
+            "remove node_modules and reinstall",
+            "delete the build output and compile again",
+            "run the type checker",
+            "clear the test cache",
+            "compile the binary for linux"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "code_execution",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Running arbitrary code or shell commands.",
+        "Exemplars": {
+          "Elems": [
+            "execute this shell command on the host",
+            "run the following python snippet",
+            "evaluate this expression at runtime",
+            "spawn a subprocess with these arguments",
+            "install and run this package",
+            "start an interactive shell on the container",
+            "execute the script from this url",
+            "run arbitrary sql against production",
+            "invoke the system command",
+            "compile and execute this payload"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "run the unit test suite",
+            "execute the scheduled nightly job",
+            "run the approved migration script",
+            "start the service using the standard entrypoint"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\b(curl|wget)\\b[^\\n]{0,40}\\|\\s*(ba)?sh\\b",
+            "\\b(eval|exec)\\s*\\(",
+            "\\bbase64\\s+-d\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "config_change",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Changing production configuration or infrastructure state.",
+        "Exemplars": {
+          "Elems": [
+            "disable the firewall rule",
+            "change the production database endpoint",
+            "turn off audit logging",
+            "scale the cluster down to zero",
+            "update the ingress to allow all traffic",
+            "modify the retention policy",
+            "switch the environment to debug mode",
+            "remove the rate limit",
+            "change the TLS settings on the gateway",
+            "edit the deployment to run as root",
+            "open the network security group to all sources",
+            "set the service replica count to zero",
+            "change the autoscaling bounds on the live cluster"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "read the current configuration",
+            "show which flags are enabled",
+            "compare staging and production settings",
+            "check what the retention policy is"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\b(disable|remove|turn\\s+off)\\b.*\\b(firewall|audit\\s+log|rate\\s+limit)\\b",
+            "\\b(scale|replica\\s+count)\\b.*\\bzero\\b",
+            "\\brun\\s+as\\s+root\\b",
+            "\\b(security\\s+group|ingress)\\b.*\\ball\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "credential_access",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Retrieving secrets, keys or tokens rather than using them.",
+        "Exemplars": {
+          "Elems": [
+            "fetch the database password from the vault",
+            "show me the API key for the payment provider",
+            "read the private signing key",
+            "list every stored secret in this namespace",
+            "retrieve the service account token",
+            "print the connection string with credentials",
+            "get the OAuth client secret",
+            "dump the kubernetes secrets",
+            "show the SSH private key contents",
+            "export the certificate and its key"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "rotate the API key on schedule",
+            "check when this certificate expires",
+            "confirm the vault is reachable",
+            "list which services have a credential configured"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\b(BEGIN (RSA |EC )?PRIVATE KEY)\\b",
+            "\\b(aws_secret_access_key|client_secret)\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "data_exfiltration",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Bulk extraction of records to somewhere outside the system of record.",
+        "Exemplars": {
+          "Elems": [
+            "export every customer record",
+            "dump the entire users table",
+            "upload the customer database to an external bucket",
+            "send all client contact details to this address",
+            "extract the full subscriber list",
+            "download every row from the accounts table",
+            "copy the whole CRM export to my drive",
+            "pull all personal data for every user",
+            "archive the complete order history offsite",
+            "retrieve every stored payment record"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "run the monthly revenue report",
+            "export my own profile data",
+            "show the last ten orders for this customer",
+            "generate the quarterly summary for finance"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "select\\s+\\*\\s+from\\s+\\w*(customer|user|account|subscriber)",
+            "\\b(mysqldump|pg_dump)\\b",
+            "\\bcopy\\s+\\w+\\s+to\\s+'?\\/"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "destructive_action",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Irreversible removal or overwriting of data or infrastructure.",
+        "Exemplars": {
+          "Elems": [
+            "drop the orders table",
+            "delete the entire production database",
+            "wipe the storage volume",
+            "truncate every row in the audit table",
+            "remove all records for this tenant",
+            "destroy the backup snapshots",
+            "purge the whole message history",
+            "erase the configuration and start over",
+            "force delete the cluster",
+            "overwrite the primary dataset"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "delete my own draft",
+            "remove a single expired session",
+            "clean up temporary files older than a day",
+            "archive last year's closed tickets"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "drop\\s+(table|database|schema)\\b",
+            "truncate\\s+table\\b",
+            "\\brm\\s+-rf\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "detection_and_audit",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Asking what happened. A sibling: audit queries phrase like the actions they are about.",
+        "Exemplars": {
+          "Elems": [
+            "show the audit log",
+            "who exported data last week",
+            "list recent administrator actions",
+            "when was this record last changed and by whom",
+            "report any failed login attempts today",
+            "which agents accessed the customer table",
+            "show me the access history for this account",
+            "summarise policy denials from yesterday",
+            "alert me if anyone downloads the full accounts table",
+            "flag any unusual deletion activity",
+            "raise an alert when a large export occurs",
+            "monitor for unusual bulk reads and tell me",
+            "watch for mass deletion and report it"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "documentation_lookup",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Asking how something works. A sibling: explanations mention the dangerous thing.",
+        "Exemplars": {
+          "Elems": [
+            "how do I configure retention",
+            "what does this parameter do",
+            "explain how the approval flow works",
+            "where is the runbook for this service",
+            "what is the difference between these two roles",
+            "describe the schema for this table",
+            "how does the gateway authenticate agents",
+            "show the documentation for this endpoint",
+            "explain how credentials are verified by the gateway",
+            "describe the token validation flow",
+            "how are secrets referenced in configuration"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "external_communication",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Sending content to a recipient outside the organisation.",
+        "Exemplars": {
+          "Elems": [
+            "email this report to an outside address",
+            "post the contents to this webhook",
+            "share the document publicly",
+            "send the file to my personal address",
+            "upload the attachment to a third party service",
+            "forward the thread to an external partner",
+            "publish this to the public channel",
+            "transmit the dataset to the vendor endpoint",
+            "push these records to the external API",
+            "create a public share link for the folder"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "email the summary to my manager",
+            "share the document with the internal team",
+            "post the status to the team channel",
+            "send the invoice to the billing contact on file"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\bwebhook\\b",
+            "\\b(public|external|third[_\\s-]?party)\\b.*\\b(share|link|channel|address|endpoint|api|service|partner)\\b",
+            "\\bshare\\b.*\\bpublicly\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "mass_notification",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Messaging a large audience at once.",
+        "Exemplars": {
+          "Elems": [
+            "email every customer on the list",
+            "send a notification to all users",
+            "broadcast this message to the whole tenant",
+            "text every contact in the database",
+            "push an alert to all devices",
+            "message everyone in the organisation",
+            "send this announcement to the full mailing list",
+            "notify all subscribers immediately",
+            "blast this to every registered address",
+            "contact the entire user base",
+            "deliver this announcement to every recipient",
+            "send the same message to the entire contact list"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "notify the three people on this ticket",
+            "email the project channel",
+            "send a reminder to the approver",
+            "message the on call engineer"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\b(broadcast|blast)\\b",
+            "\\b(all|every|entire|whole)\\b.*\\b(users?|customers?|subscribers?|contacts?|devices?|recipients?|addresses|tenant|organisation|organization|mailing\\s+list|user\\s+base)\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "payment_initiation",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Moving money or creating a financial obligation.",
+        "Exemplars": {
+          "Elems": [
+            "send a wire transfer to the payee",
+            "initiate an ACH payment to this vendor",
+            "move funds to the external account",
+            "issue a refund to the customer card",
+            "pay the outstanding invoice now",
+            "transfer the balance to another account",
+            "schedule a recurring payment to this supplier",
+            "release the held settlement",
+            "authorise the payout",
+            "charge this card for the full amount"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "show the pending payments",
+            "check the account balance",
+            "list invoices due this month",
+            "explain how settlement timing works"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\bwire[_\\s-]?transfer\\b",
+            "\\bach\\b.*\\b(payment|transfer|debit|credit)\\b",
+            "\\b(initiate|authorise|authorize|release)\\b.*\\b(payment|payout|settlement|funds)\\b",
+            "\\bcharge\\b.*\\bcard\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "permission_change",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Altering who can access what.",
+        "Exemplars": {
+          "Elems": [
+            "grant admin rights to this user",
+            "add the service account to the privileged group",
+            "give this agent write access to production",
+            "remove the approval requirement for this role",
+            "elevate my permissions to administrator",
+            "assign the owner role to an external account",
+            "widen the policy to allow every action",
+            "add a new member to the security group",
+            "change the resource owner to this principal",
+            "disable the access review for this group"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "show which roles this user has",
+            "list the members of the group",
+            "explain what this permission allows",
+            "request access through the normal approval flow"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\b(grant|give|assign|elevate)\\b.*\\b(admin|administrator|owner|privileged|write\\s+access)\\b",
+            "\\badd\\b.*\\bto\\b.*\\b(privileged|security)\\s+group\\b",
+            "\\b(remove|disable)\\b.*\\b(approval\\s+requirement|access\\s+review)\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "routine_reporting",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Ordinary scheduled or scoped reporting. A sibling: these phrase like exports but are sanctioned.",
+        "Exemplars": {
+          "Elems": [
+            "run the monthly revenue report",
+            "generate the quarterly summary",
+            "produce the weekly usage figures",
+            "build the dashboard extract for finance",
+            "compile this week's ticket statistics",
+            "send the scheduled performance digest",
+            "export the agreed KPI set for the board",
+            "refresh the standard analytics view"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "scheduled_maintenance",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Sanctioned operational work. A sibling: maintenance phrases like destruction.",
+        "Exemplars": {
+          "Elems": [
+            "run the nightly cleanup job",
+            "apply the approved migration",
+            "rotate the logs as scheduled",
+            "restart the service during the maintenance window",
+            "archive records older than the retention period",
+            "vacuum the database on schedule",
+            "prune expired sessions",
+            "rebuild the search index"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "schema_discovery",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Listing what exists. A sibling: enumeration is not extraction.",
+        "Exemplars": {
+          "Elems": [
+            "list the available tools",
+            "what tables exist in this database",
+            "show the fields on the customer object",
+            "describe the api endpoints",
+            "enumerate the available skills",
+            "what operations does this server support",
+            "show the column types for this table",
+            "list the namespaces I can see"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "security_control_bypass",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Turning off or evading a safety control in the development workflow.",
+        "Exemplars": {
+          "Elems": [
+            "commit without running the pre-commit hooks",
+            "skip the CI checks on this push",
+            "disable the lint rule for this file",
+            "bypass the type checker on this line",
+            "turn off the security scanner for this commit",
+            "suppress the vulnerability warning",
+            "add an exception so the test suite passes",
+            "disable signature verification for this push",
+            "ignore the failing security check and merge",
+            "remove the branch protection rule",
+            "silence the secret scanner on this file",
+            "turn off the policy check for this repository"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "run the pre-commit hooks before committing",
+            "fix the lint error properly",
+            "add a type annotation so the checker passes",
+            "resolve the vulnerability the scanner reported"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "--no-verify\\b",
+            "\\[skip[ -]ci\\]|\\[ci skip\\]",
+            "eslint-disable|@ts-ignore|@ts-nocheck",
+            "#\\s*nosec\\b",
+            "#\\s*type:\\s*ignore\\b",
+            "//\\s*nolint\\b",
+            "\\bgit\\s+push\\b.*--force\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "security_policy_question",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Asking about the rules rather than acting. A sibling: stance is invisible to an embedding.",
+        "Exemplars": {
+          "Elems": [
+            "am I allowed to export customer data",
+            "what is the policy on deleting records",
+            "do not export any customer records",
+            "is bulk download permitted for this role",
+            "which actions require approval",
+            "explain why this request was blocked",
+            "what are the retention rules for payment data",
+            "can an agent drop a table without review",
+            "under no circumstances should you transfer the client list",
+            "never send credentials over email",
+            "is an agent permitted to move money without review",
+            "what approval is needed before deleting production data",
+            "are wire transfers allowed from this account",
+            "state the rule about removing records"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "self_service",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Acting on one's own data. A sibling: the same verb on a different scope.",
+        "Exemplars": {
+          "Elems": [
+            "update my own profile",
+            "reset my password",
+            "export my personal data",
+            "delete my own account",
+            "change my notification preferences",
+            "download a copy of my activity",
+            "revoke my old session",
+            "update my contact details",
+            "change my own email address on file",
+            "update the phone number on my own profile",
+            "enrol a new factor for myself"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "single_record_lookup",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Reading one scoped item. A sibling: a scoped read phrases like a bulk read.",
+        "Exemplars": {
+          "Elems": [
+            "show the order for this reference",
+            "look up the customer by email",
+            "get the balance for account 1234",
+            "fetch the ticket details",
+            "read this one document",
+            "find the user with this id",
+            "display the invoice for last month",
+            "open the record I was working on"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "software_development",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Writing, changing or explaining code. A sibling: the dominant benign population on a developer machine, which otherwise lands on destructive or exfiltration intents.",
+        "Exemplars": {
+          "Elems": [
+            "fix the failing test in the auth module",
+            "refactor this function to take a context",
+            "add a null check before dereferencing the pointer",
+            "rename this variable across the package",
+            "update the import paths after the move",
+            "write a unit test for the retry logic",
+            "implement the interface on this struct",
+            "add error handling to the request path",
+            "split this file into two packages",
+            "document what this function returns",
+            "convert the callback to async await",
+            "extract the duplicated block into a helper"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "source_exfiltration",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Moving source code or repository contents outside the organisation. Distinct from data_exfiltration, which is about records.",
+        "Exemplars": {
+          "Elems": [
+            "push this repository to my personal github account",
+            "upload the source code to pastebin",
+            "copy the private repo to an external remote",
+            "send the proprietary source to this address",
+            "mirror this internal repository publicly",
+            "archive the codebase and upload it offsite",
+            "add my personal fork as a remote and push everything",
+            "export the whole repository to my drive",
+            "publish this internal package to the public registry",
+            "share the source tree with an outside collaborator"
+          ]
+        },
+        "Twins": {
+          "Elems": [
+            "push to the company remote",
+            "open a pull request on the internal repo",
+            "publish the release to our private registry",
+            "share this snippet with the team channel"
+          ]
+        },
+        "Patterns": {
+          "Elems": [
+            "\\bgit\\s+remote\\s+add\\b.*\\b(github\\.com|gitlab\\.com|bitbucket\\.org)\\b",
+            "\\b(pastebin|gist\\.github|transfer\\.sh|file\\.io)\\b",
+            "\\bnpm\\s+publish\\b"
+          ]
+        },
+        "Acts": true,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "status_check",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Health, availability and progress. A sibling: operational noise that should never score as risk.",
+        "Exemplars": {
+          "Elems": [
+            "is the service healthy",
+            "check whether the job finished",
+            "what is the current queue depth",
+            "report the uptime for this endpoint",
+            "did the last sync succeed",
+            "show the deployment status",
+            "ping the upstream and report latency",
+            "is the database reachable",
+            "what is the current error rate",
+            "report the failure percentage for this service",
+            "show throughput and latency right now"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "troubleshooting",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Diagnosing a problem. A sibling: investigation touches the same objects as abuse.",
+        "Exemplars": {
+          "Elems": [
+            "why did this request fail",
+            "trace the error for this transaction",
+            "show the stack trace from the last failure",
+            "which step in the pipeline is slow",
+            "diagnose the timeout on this endpoint",
+            "what caused the retry storm",
+            "correlate these errors with the deploy",
+            "investigate the spike in denials"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    },
+    {
+      "ObjectMeta": {
+        "Kind": "AIIntent",
+        "Namespace": "procyon",
+        "Name": "version_control",
+        "CreatedAt": "",
+        "UpdatedAt": "",
+        "WrOwners": {
+          "ObjectRef": []
+        },
+        "RdOwners": {
+          "ObjectRef": []
+        },
+        "Labels": {
+          "Map": {}
+        },
+        "RevisionID": "",
+        "QueryParam": "",
+        "CTags": {
+          "Map": {}
+        }
+      },
+      "Spec": {
+        "Description": "Branching, committing and reviewing. A sibling: version control phrases like data movement and like configuration change.",
+        "Exemplars": {
+          "Elems": [
+            "commit these changes with a message",
+            "create a branch for this work",
+            "rebase onto main and resolve conflicts",
+            "open a pull request for review",
+            "show me the diff for this file",
+            "stash my work in progress",
+            "revert the last commit",
+            "push this branch to origin",
+            "cherry pick that fix onto the release branch",
+            "show the history for this function",
+            "merge main into my branch",
+            "tag this commit for release"
+          ]
+        },
+        "Twins": {
+          "Elems": []
+        },
+        "Patterns": {
+          "Elems": []
+        },
+        "Acts": false,
+        "Floor": 0
+      },
+      "Status": {
+        "Validation": "",
+        "Error": "",
+        "ValidatedAt": "",
+        "Warnings": {
+          "Elems": []
+        }
+      },
+      "State": "Active",
+      "Source": "builtin"
+    }
+  ]
+}

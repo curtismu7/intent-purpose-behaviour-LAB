@@ -1,12 +1,12 @@
 # Intent Purpose Behaviour LAB
 
-A simulation of the "Intent, Purpose and Behaviour" release claims, plus the two token flows marked new in the same release: three signals asked of every call, on-behalf-of, and ID-JAG.
+A simulation of the "Intent, Purpose and Behaviour" release claims, plus the two token flows marked new in the same release: three signals asked of every call, on-behalf-of, and ID-JAG — now with the console's **real intent catalogue**: the 25 built-in Privilege intents measured on the local console (2026-11-18), and a customer-intent editor that authors the demo family's own intent under the console's clone-replaces-builtin rule.
 
 Tier: Demo
 Repo: https://github.com/curtismu7/intent-purpose-behaviour-LAB
 Catalog: D101
 
-Source: the Ping ID4AI Workforce H2 2026 deck, slide 48 (release 2026-11-02). **Every product claim is a Ping release claim, UNVERIFIED on our tenant.** Nothing here calls a real gateway, identity provider or tenant, and nothing leaves your machine.
+Source: the Ping ID4AI Workforce H2 2026 deck, slide 48 (release 2026-11-02). **Every product claim is a Ping release claim, UNVERIFIED on our tenant.** One thing IS measured: the intent catalogue on the new **Intent catalogue** tab is a snapshot of the local Privilege console's own `GET /v1/aiintents` (2026-11-18, sanitised: tenant and ids stripped) — those 25 intents, their exemplars, twins, regex patterns, Acts and Floor are the console's, not the deck's. Nothing here calls a real gateway, identity provider or tenant, and nothing leaves your machine.
 
 ## What is simulated
 
@@ -21,10 +21,12 @@ What it shows:
 3. **On-behalf-of.** A local RFC 8693 token exchange: the caller's token is swapped for one minted for the MCP server (`aud`, an `act` claim) and the backend validates it. The deck says the backend validates a token issued to it and that `act` preserves the original caller; the specific checks the lab's backend runs (signature, issuer, audience, expiry, `act`) and the 300 second lifetime are the lab's own rules. Failure cases included.
 4. **ID-JAG.** Two issuers: the user's IdP issues an identity assertion grant, the gateway redeems it at the partner app's own issuer. The deck claims no shared credential and no re-consent; the lab models neither a consent step nor client authentication on the redeem leg, so it cannot demonstrate that claim, and its panel says what the mock does rather than proving it. (The standalone walkthrough is the sibling `id-jag-standalone-LAB`; this lab does not import from it.)
 5. **Diagram.** ReactFlow, drawn from diagram-studio/1 data loaded by name: movable boxes, Simulate, speed, Reset (restores box positions).
-6. **Talk track.** Also in `docs/talk-track.md`.
-7. **What Privilege did.** Under each result, the shared trace panel shows the exact request, the exact response and the decisions in between. For the lab's own simulated gateway every decision is one the engine really computed ("checked"); for the real AI Guard call (Real mode, owner-run) the gateway reports no per-check detail, so decisions are only "inferred" or "observed".
+6. **Intent catalogue.** The console's 25 built-in intents (measured 2026-11-18 on the local Privilege desktop console): twelve **Acting** intents whose real regex patterns may hard-refuse a call, thirteen **sibling** intents that exist so ordinary work does not score as risk. Every card shows the console's own Exemplars, Twins (the benign look-alike), Patterns, Acts and Floor. A simulator classifies any phrase against the whole catalogue by real pattern match and by the similarity stand-in.
+7. **Customer intent.** Author the demo family's own intent: clone the console's `data_exfiltration` (template provided), edit its real regexes, exemplars and twins, save it to your workspace, and watch the console's clone rule — a custom intent with a built-in's name replaces the built-in wholesale, and the gateway resolves your copy first. Hostile patterns (catastrophic backtracking shapes) are refused at compile time with a reason.
+8. **Talk track.** Also in `docs/talk-track.md`.
+9. **What Privilege did.** Under each result, the shared trace panel shows the exact request, the exact response and the decisions in between. For the lab's own simulated gateway every decision is one the engine really computed ("checked"); for the real AI Guard call (Real mode, owner-run) the gateway reports no per-check detail, so decisions are only "inferred" or "observed".
 
-Field names for intents (`AIIntent`), purpose (`PurposeProfile`), behaviour (`BehaviourConfig`) and on-behalf-of (`OBO`, with `Redeem` as the ID-JAG second leg) come from the Privilege console swagger of 2026-10-31. That is schema only: it proves the names exist, not how the product behaves. Everything else (the pattern syntax, the similarity stand-in, the scoring points, the reason codes, the alert and ask thresholds, the refusal switches) is lab-invented and tagged "lab-invented" in the policy editor.
+Field names for intents (`AIIntent`), purpose (`PurposeProfile`), behaviour (`BehaviourConfig`) and on-behalf-of (`OBO`, with `Redeem` as the ID-JAG second leg) come from the Privilege console swagger of 2026-10-31, and the intent catalogue's contents are measured from the console of 2026-11-18. That still leaves lab-invented: the similarity stand-in (word overlap, where the product uses an encoder), the scoring points, the reason codes, the alert and ask thresholds and the refusal switches — all tagged "lab-invented" in the policy editor.
 
 ## Run from a clone
 

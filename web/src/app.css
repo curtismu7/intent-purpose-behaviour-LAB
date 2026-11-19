@@ -129,3 +129,18 @@ summary { cursor: pointer; font-weight: 700; font-size: 14px; }
 .pc--deny { background: color-mix(in srgb, var(--danger-text) 14%, transparent); }
 .pc--warn { background: color-mix(in srgb, var(--status-warn) 14%, transparent); }
 .pc__meta { font-size: 0.72rem; opacity: 0.75; }
+
+/* Intent Catalogue and Customer Intent tabs. */
+.stack { display: grid; gap: 12px; min-width: 0; }
+.stack > * { min-width: 0; }
+.chiprow { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; align-items: center; }
+.chiprow .chip { padding: 4px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.chiprow .chip:hover { background: var(--box-grey); }
+.chiprow .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
+.cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.intent-card { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 10px 12px; min-width: 0; }
+.intent-card .card__head { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font: inherit; color: var(--text); flex-wrap: wrap; }
+.intent-card .card__chev { margin-left: auto; font-weight: 700; }
+.intent-detail h4 { margin: 10px 0 2px; font-size: 13px; }
+.panel textarea { width: 100%; margin: 2px 0 8px; display: block; font: 13px var(--font-mono); }
+@media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }

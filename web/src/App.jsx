@@ -4,6 +4,8 @@ import ThreeSignals from "./components/ThreeSignals";
 import Baseline from "./components/Baseline";
 import FlowTab from "./components/FlowTab";
 import DiagramTab from "./components/DiagramTab";
+import IntentCatalogue from "./components/IntentCatalogue";
+import CustomerIntent from "./components/CustomerIntent";
 import TalkTrack from "./components/TalkTrack";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu";
 import TalkTrackDialog from "./talk-track/TalkTrackDialog.jsx";
@@ -15,6 +17,8 @@ const LAB_VERSION = (() => { try { return JSON.parse(fs.readFileSync(new URL("..
 
 export const TABS = [
   { id: "signals", label: "Three signals" },
+  { id: "intents", label: "Intent catalogue" },
+  { id: "customer-intent", label: "Customer intent" },
   { id: "baseline", label: "Baseline" },
   { id: "obo", label: "On-behalf-of" },
   { id: "idjag", label: "ID-JAG" },
@@ -24,7 +28,7 @@ export const TABS = [
 // The banner is never blank and never claims one mode before it knows: until the story answers it says both, honestly.
 const TAIL = "Every product claim is a Ping release claim, UNVERIFIED on our tenant (release 2026-11-02). Nothing here calls a real gateway, identity provider or tenant.";
 export const BANNER_UNKNOWN = `SIMULATED, MOCK or LIVE mode (loopback only, no outbound network). ${TAIL}`;
-const PRESENTER_TALK = { signals: ["say-first", "three-signals", "tiers", "intent", "purpose", "unverified"], baseline: ["behaviour"], obo: ["obo"], idjag: ["id-jag"], diagram: ["three-signals"] };
+const PRESENTER_TALK = { signals: ["say-first", "three-signals", "tiers", "intent", "purpose", "unverified"], intents: ["intent", "catalogue"], "customer-intent": ["catalogue", "unverified"], baseline: ["behaviour"], obo: ["obo"], idjag: ["id-jag"], diagram: ["three-signals"] };
 const MODE_KEY = "ipb.mode";
 const THEME_KEY = "ipb.theme";
 function initialTheme() {
@@ -146,6 +150,8 @@ export default function App() {
                 </aside>
               )}
               {tab === "signals" && <ThreeSignals key={vertical} story={story} mode={mode} policy={policy} setPolicy={setPolicy} resetSignal={resetSignal} requestedId={requested} />}
+              {tab === "intents" && <IntentCatalogue />}
+              {tab === "customer-intent" && <CustomerIntent />}
               {tab === "baseline" && <Baseline key={vertical} story={story} mode={mode} policy={policy} resetSignal={resetSignal} />}
               {tab === "obo" && <FlowTab key={`obo-${vertical}`} kind="obo" story={story} mode={mode} resetSignal={resetSignal} />}
               {tab === "idjag" && <FlowTab key={`idjag-${vertical}`} kind="idjag" story={story} mode={mode} resetSignal={resetSignal} />}

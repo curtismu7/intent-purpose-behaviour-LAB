@@ -15,3 +15,18 @@ export async function postJson(url, payload) {
 }
 
 export const resetWorkspace = () => workspaceFetch("/api/reset", { method: "POST", body: "{}" }).then((r) => r.ok);
+
+// PUT / DELETE JSON. Same { ok, status, body } shape as postJson: an error status is data, not an exception.
+export async function putJson(url, payload) {
+  const r = await workspaceFetch(url, { method: "PUT", body: JSON.stringify(payload) });
+  let body = {};
+  try { body = await r.json(); } catch { /* not JSON */ }
+  return { ok: r.ok, status: r.status, body };
+}
+
+export async function deleteJson(url) {
+  const r = await workspaceFetch(url, { method: "DELETE" });
+  let body = {};
+  try { body = await r.json(); } catch { /* not JSON */ }
+  return { ok: r.ok, status: r.status, body };
+}

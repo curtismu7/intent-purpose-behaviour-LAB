@@ -36,6 +36,10 @@ The gateway swaps the caller's verified token for one minted for the downstream 
 
 When the target app trusts a different identity provider, the exchange returns an identity assertion grant and the gateway redeems it at that app's own issuer. The user's identity arrives at an app whose IdP you do not control, with no shared credential and no re-consent (the deck's claim, UNVERIFIED on our tenant; the lab models neither a consent step nor client authentication, so it cannot show it). For the standalone ID-JAG walkthrough, see the sibling id-jag-standalone-LAB; this lab does not import from it.
 
+## The intent catalogue and a customer intent
+
+The Intent Catalogue tab shows the 25 built-in intents measured on the local Privilege console on 2026-11-18: twelve Acting intents whose real regex patterns may hard-refuse, and thirteen siblings that exist so ordinary work does not score as risk. The Customer Intent tab authors our own: a clone of data_exfiltration reworded for the standalone demo family. The console's clone rule is live here — a custom intent with a built-in's name replaces it wholesale, and the gateway resolves your copy first.
+
 ## Why it matters
 
 The challenge: a tool name and its arguments say what was asked for, but not what it was really for, whether this agent was ever meant to do it, or whether it normally does. Technical value, per the Ping deck (slide 48): three separable signals. Deterministic intent patterns and purpose declarations refuse hard; learned behaviour baselines drive alerts and approval. Business value, per the same slide: the enforceable declaration "this agent exists to reconcile invoices" unblocks unattended agents in processes that could not otherwise approve them. These are Ping claims, not measured by us.

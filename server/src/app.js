@@ -30,6 +30,8 @@ import { buildMethodTable, charsetProblem, isPageAddress, methodNotAllowed } fro
 import { shelfInfo } from './shelfLink.js';
 import { aiGuardConfig, sendToAiGuard } from './aiguardProbe.js';
 import { aiGuardFailure, aiGuardTrace, evaluateTrace } from './gatewayExchanges.js';
+import { catalogue, simulate, cleanIntentBody, checkPattern, CUSTOM_INTENT_TEMPLATE } from './intentCatalogue.js';
+import { loadConsoleIntents, consoleConfigured } from './consoleSource.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = process.env.WEB_DIST || path.resolve(HERE, '../../web/dist');
@@ -44,6 +46,8 @@ export const ROUTES = {
   '/api/baseline': ['GET', 'POST'],
   '/api/mode': ['POST'],
   '/api/evaluate': ['POST'], '/api/obo': ['POST'], '/api/idjag': ['POST'], '/api/reset': ['POST'],
+  '/api/intents': ['GET', 'POST'], '/api/intents/check-pattern': ['POST'], '/api/intents/template': ['GET'],
+  '/api/customer-intent': ['GET', 'PUT', 'DELETE'],
 };
 const METHODS = buildMethodTable(ROUTES);
 // A fixed-code answer: nothing the visitor sent is ever put in the code or the body.
@@ -200,6 +204,70 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
       if (e?.name === 'TimeoutError' || /timeout/i.test(String(e?.message))) return res.status(504).json({ error: 'gateway_timeout', message: 'the gateway did not answer in time', ...(e.sent ? { trace: aiGuardFailure({ cfg, sent: e.sent, error: 'the gateway did not answer in time' }) } : {}) });
       return next(e);
     }
+  });
+
+  // ---- Intent Catalogue and Customer Intent (tabs 7 and 8) ----
+  // The catalogue: built-in intents from the measured snapshot (Mock) or the local console (Real, owner-run),
+  // plus this workspace's customer intents. A customer intent with a built-in's name REPLACES it (the console's clone rule).
+  const liveIntents = async () => {
+    const cfg = consoleConfigured();
+    if (!cfg.configured || !cfg.loopback) return null;
+    const r = await loadConsoleIntents();
+    return r.ok ? r.intents : null;
+  };
+  api.get('/intents', workspace, async (req, res) => {
+    noStore(res);
+    const live = await liveIntents();
+    const cat = catalogue(workspaces.intents(req.ws), live);
+    const cfg = consoleConfigured();
+    return res.json({ ...cat, realAvailable: cfg.configured && cfg.loopback, realReason: cfg.configured ? (cfg.loopback ? null : `the console origin ${cfg.host} is not loopback`) : 'set PRIVILEGE_CONSOLE_URL, PRIVILEGE_TENANT, PRIVILEGE_API_KEY and PRIVILEGE_API_SECRET in the lab .env (owner-run)' });
+  });
+  api.post('/intents', workspace, async (req, res) => {
+    noStore(res);
+    const body = req.body;
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) return res.status(400).json({ error: 'bad_request' });
+    const { call, floor } = body;
+    let policyFloor = 0;
+    try {
+      policyFloor = validatePolicy({ intent: { Floor: typeof floor === 'number' ? floor : undefined } }).intent.Floor;
+    } catch (e) {
+      if (e instanceof InputError) return res.status(400).json({ error: e.code, detail: e.message });
+      throw e;
+    }
+    try {
+      const live = await liveIntents();
+      return res.json(simulate({ call, customIntents: workspaces.intents(req.ws), floor: policyFloor, liveIntents: live }));
+    } catch (e) {
+      if (e instanceof InputError) return res.status(400).json({ error: e.code, detail: e.message });
+      throw e;
+    }
+  });
+  api.post('/intents/check-pattern', workspace, (req, res) => {
+    noStore(res);
+    const body = req.body;
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) return res.status(400).json({ ok: false, reason: 'empty' });
+    return res.json(checkPattern(typeof body.pattern === 'string' ? body.pattern : ''));
+  });
+  api.get('/intents/template', workspace, (_req, res) => { noStore(res); return res.json(CUSTOM_INTENT_TEMPLATE); });
+  api.get('/customer-intent', workspace, (req, res) => { noStore(res); return res.json({ intents: workspaces.intents(req.ws) }); });
+  api.put('/customer-intent', workspace, (req, res) => {
+    noStore(res);
+    try {
+      const intent = cleanIntentBody(req.body);
+      const list = workspaces.intents(req.ws).filter((i) => i.name !== intent.name).concat([intent]);
+      workspaces.setIntents(req.ws, list);
+      return res.json({ saved: intent.name, intents: list });
+    } catch (e) {
+      if (e instanceof InputError) return res.status(400).json({ error: e.code, detail: e.message });
+      throw e;
+    }
+  });
+  api.delete('/customer-intent', workspace, (req, res) => {
+    noStore(res);
+    const name = typeof req.query.name === 'string' ? req.query.name : '';
+    const before = workspaces.intents(req.ws).length;
+    workspaces.setIntents(req.ws, workspaces.intents(req.ws).filter((i) => i.name !== name));
+    return res.json({ removed: before !== workspaces.intents(req.ws).length, intents: workspaces.intents(req.ws) });
   });
 
   api.post('/reset', workspace, (req, res) => { noStore(res); workspaces.reset(req.ws); return res.json({ reset: 'ok', workspace: req.ws }); });

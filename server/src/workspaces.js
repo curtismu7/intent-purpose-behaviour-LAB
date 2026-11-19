@@ -21,7 +21,7 @@ export function workspaceFrom(req) {
 
 export function createWorkspaces({ max = 500, ttlMs = 60 * 60 * 1000, now = Date.now } = {}) {
   const map = new Map(); // id -> { runs, baseline: { learner, log, counter }, at }; insertion order = oldest first
-  const fresh = () => ({ runs: [], baseline: { learner: createLearner(), log: [], counter: 0 }, at: now() });
+  const fresh = () => ({ runs: [], baseline: { learner: createLearner(), log: [], counter: 0 }, intents: [], at: now() });
   const sweep = () => {
     const t = now();
     for (const [id, v] of map) { if (t - v.at > ttlMs) map.delete(id); else break; }
@@ -34,6 +34,8 @@ export function createWorkspaces({ max = 500, ttlMs = 60 * 60 * 1000, now = Date
     record(id, run) { const v = touch(id); v.runs = [...v.runs, { ...maskDeep(run), at: now() }].slice(-MAX_RUNS); return this.runs(id); },
     baseline(id) { return touch(id).baseline; },
     logBaseline(id, entry) { const b = touch(id).baseline; b.log = [...b.log, maskDeep(entry)].slice(-MAX_LOG); },
+    intents(id) { return touch(id).intents ?? []; },
+    setIntents(id, list) { const v = touch(id); v.intents = list; },
     reset(id) { map.delete(id); },
     size() { return map.size; },
   };
