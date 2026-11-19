@@ -19,7 +19,7 @@ function IntentPanel({ s, claim }) {
   const sim = s.intent.semantic;
   return (
     <section className="panel signal" aria-label="Intent" data-testid="panel-intent">
-      <h2>Intent <span className="muted">what is it trying to do?</span></h2>
+      <h2><span className="step-num" aria-hidden="true">2</span>Intent <span className="muted">what is it trying to do?</span></h2>
       <ClaimTag label={claim} />
       <h3>Deterministic patterns <span className="tag">may refuse</span></h3>
       {s.intent.deterministic.matched.length
@@ -39,7 +39,7 @@ function PurposePanel({ s, agent, claim }) {
   const p = s.purpose;
   return (
     <section className="panel signal" aria-label="Purpose" data-testid="panel-purpose">
-      <h2>Purpose <span className="muted">was it ever in scope?</span></h2>
+      <h2><span className="step-num" aria-hidden="true">3</span>Purpose <span className="muted">was it ever in scope?</span></h2>
       <ClaimTag label={claim} />
       <p>Key <code>{visible(agent)}</code> declares: <b data-testid="declared">{p.declared ? visible(p.declared) : "nothing"}</b></p>
       <p>Status: <span className="tag" data-state={p.status === "in-scope" ? "ok" : "bad"} data-testid="purpose-status">{p.status}</span> <span className="tag">may refuse</span></p>
@@ -53,7 +53,7 @@ function BehaviourPanel({ s, claim }) {
   const b = s.behaviour;
   return (
     <section className="panel signal" aria-label="Behaviour" data-testid="panel-behaviour">
-      <h2>Behaviour <span className="muted">does this agent do this?</span></h2>
+      <h2><span className="step-num" aria-hidden="true">4</span>Behaviour <span className="muted">does this agent do this?</span></h2>
       <ClaimTag label={claim} />
       <p>Phase: <span className="tag" data-state={b.phase === "enforcing" ? "ok" : "warn"} data-testid="phase">{b.phase}</span> <span className="tag">alerts or asks, never denies</span></p>
       <p className="muted">{PHASE_TEXT[b.phase]}. {b.callsSeen} calls seen (scoring from {b.minObservations}, enforcing from {b.enforceObservations}).</p>
@@ -112,7 +112,7 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
   return (
     <div className="signals-tab">
       <div className="panel" data-testid="picker-panel">
-        <h2>Pick a call</h2>
+        <h2><span className="step-num" aria-hidden="true">1</span>Pick a call</h2>
         <div className="seg" role="group" aria-label="Scripted calls">
           {story.scenarios.map((s) => <button key={s.id} type="button" aria-pressed={id === s.id && !customResult?.ok} onClick={() => { setId(s.id); setCustomResult(null); }} data-testid={`sc-${s.id}`}>{s.title}</button>)}
         </div>
