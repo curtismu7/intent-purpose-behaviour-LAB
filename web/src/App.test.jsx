@@ -227,7 +227,7 @@ describe("on-behalf-of and ID-JAG", () => {
     await userEvent.click(within(decoded).getByRole("button", { name: "Form" }));
     const pane = decoded.parentElement.querySelector(".json--form");
     const hotKeys = [...pane.querySelectorAll('.jform__row[data-hot="true"] > .jform__k')].map((n) => n.textContent);
-    expect(hotKeys).toEqual(expect.arrayContaining(["act", "aud", "jti", "kid"]));
+    expect(hotKeys).toEqual(expect.arrayContaining(["header.kid", "claims.aud", "claims.act.sub", "claims.jti"]));
   }, 60000);
 
   it("OBO in Mock: tokens are shown raw and labelled mock, with a placeholder signature", async () => {
