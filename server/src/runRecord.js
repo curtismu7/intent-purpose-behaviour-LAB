@@ -1,8 +1,8 @@
 // Rule 27: this lab's half of the shared run-observability panel. A run (one evaluate or OBO request) computes its events ONCE, stamps
 // each once, stores them in the workspace, and writes one stdout line per POLICY-POINT decision from the same events. The record the
-// panel reads is built from the stored events by the shared core (runObservability.js). The lab reads no product log, and every stored
-// row is a simulated event the Mock computed from its table. Live runs (the in-process engine) are not stored: a Real record would claim
-// a basis the lab does not have, so a Live run gets no run id and its decision lines carry run=none.
+// panel reads is built from the stored events by the shared core (runObservability.js). The lab reads no product log. Every stored row is
+// a simulated event: the Mock computed it from its table, or the Live in-process engine computed it. Both are stored with source mock,
+// because the core allows simulated rows only in a mock record, and neither is ever read from a log.
 import crypto from 'node:crypto';
 import { LAYERS, createMasker, createRunObservability } from './runObservability.js';
 
@@ -63,7 +63,7 @@ const NOT_ASKED = {
   resource: 'This run does not call the MCP server, so no resource decision exists for it.',
 };
 
-// The six layer specs for one run. A layer with no event is not-logged with its reason; every row is a simulated Mock event.
+// The six layer specs for one run. A layer with no event is not-logged with its reason; every row is simulated (Mock table or Live engine).
 function specsFor(run) {
   return LAYERS.map((layer) => {
     const rows = run.events.filter((e) => e.layer === layer).map(({ at, outcome, message }) => ({ at, outcome, message }));
@@ -74,14 +74,10 @@ function specsFor(run) {
 }
 
 // Computes the run ONCE: id first, then the events (each stamped once), then the run is stored, then its stdout lines are written.
-// `store` is the workspaces store (addRun); `emit(run)` writes the lines and must never throw into the answer. A Live run is not stored:
-// its lines are written with no run id (run=none) and the answer carries runId null.
+// `store` is the workspaces store (addRun); `emit(run)` writes the lines and must never throw into the answer. The run is kept in the mode it
+// was made in (mock or live); both modes store source mock, since every row is simulated.
 export function recordRun({ ws, store, emit, mode, kind, scenario, actor, build }) {
   if (mode !== 'mock' && mode !== 'live') throw new Error(`no run mode ${typeof mode}`);
-  if (mode === 'live') {
-    emit({ actor, events: build(nowIso) });
-    return { runId: null };
-  }
   const runId = newRunId();
   const startedAt = nowIso();
   const events = build(nowIso);
