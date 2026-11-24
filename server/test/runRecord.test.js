@@ -105,7 +105,7 @@ test('route answers: a missing mode, a malformed run id and a method other than 
     assert.equal(badId.body.error, 'bad_run_id');
     const wrong = await fetch(`${url}/api/run-record?runId=r1-00000000&mode=mock`, { method: 'POST', headers: { origin: url, 'content-type': 'application/json' }, body: '{}' });
     assert.equal(wrong.status, 405);
-    assert.equal(wrong.headers.get('allow'), 'GET');
+    assert.equal(wrong.headers.get('allow'), 'GET, HEAD', 'Allow comes from the route table: GET and the HEAD it implies');
   });
 });
 
