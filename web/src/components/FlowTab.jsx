@@ -3,6 +3,7 @@ import { postJson } from "../api";
 import { visible } from "../safeText";
 import { ClaimTag, Checks, ConsoleConfig, Hops, Token } from "./Bits";
 import Json from "./Json";
+import RunPanel from "./RunPanel";
 
 const form = (o) => Object.entries(o).map(([k, v]) => `${k}=${v}`).join("\n");
 
@@ -83,6 +84,8 @@ export default function FlowTab({ kind, story, mode, resetSignal }) {
       </div>
       {error && <p className="app-error" role="alert">Could not run ({error}).</p>}
       {res ? <Result kind={kind} r={res} /> : !error && <p className="muted">Loading...</p>}
+      {/* OBO only: the ID-JAG flow is not recorded yet. The panel takes the mode of the result it shows, as ThreeSignals does. */}
+      {kind === "obo" && res?.runId && <RunPanel runId={res.runId} mode={res.mode} />}
     </div>
   );
 }

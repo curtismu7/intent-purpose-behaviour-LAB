@@ -32,6 +32,8 @@ import { aiGuardConfig, sendToAiGuard } from './aiguardProbe.js';
 import { aiGuardFailure, aiGuardTrace, evaluateTrace } from './gatewayExchanges.js';
 import { catalogue, simulate, cleanIntentBody, checkPattern, CUSTOM_INTENT_TEMPLATE } from './intentCatalogue.js';
 import { loadConsoleIntents, consoleConfigured } from './consoleSource.js';
+import { RunObsError } from './runObservability.js';
+import { RUN_ID_RE, createDecisionLog, evaluateEvents, oboEvents, recordOf, recordRun } from './runRecord.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const WEB_DIST = process.env.WEB_DIST || path.resolve(HERE, '../../web/dist');
@@ -42,7 +44,7 @@ export const ROUTES = {
   '/api/shelf': ['GET'],
   '/': ['GET'],
   '/api/health': ['GET'],
-  '/api/story': ['GET'], '/api/diagram': ['GET'], '/api/info': ['GET'], '/api/runs': ['GET'],
+  '/api/story': ['GET'], '/api/diagram': ['GET'], '/api/info': ['GET'], '/api/runs': ['GET'], '/api/run-record': ['GET'],
   '/api/baseline': ['GET', 'POST'],
   '/api/mode': ['POST'],
   '/api/evaluate': ['POST'], '/api/obo': ['POST'], '/api/idjag': ['POST'], '/api/reset': ['POST'],
@@ -54,7 +56,11 @@ const METHODS = buildMethodTable(ROUTES);
 const fail = (res, status, code, headers = {}) => res.set(headers).status(status).json({ error: code });
 const decoded = (p) => { try { return decodeURIComponent(p); } catch { return null; } };
 
-export function createApp({ health = createHealth(), configFile = CONFIG, workspaces = createWorkspaces(), table = MOCK_TABLE, webDist = WEB_DIST } = {}) {
+// Rule 27: one stdout line per policy-point decision. `runLog` takes a line (tests pass a silent one).
+const writeStdout = (line) => { process.stdout.write(`${line}\n`); };
+
+export function createApp({ health = createHealth(), configFile = CONFIG, workspaces = createWorkspaces(), table = MOCK_TABLE, webDist = WEB_DIST, runLog = writeStdout } = {}) {
+  const emit = createDecisionLog(runLog);
   const app = express();
   app.disable('x-powered-by');
   // 1. The response mask: everything that leaves through res.json (hops, echo, errors, state, story) is passed through maskDeep, strings and object keys, the
@@ -154,7 +160,8 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
       { n: 2, from: 'gateway', to: 'signals', label: 'Gateway asks the three signals and the policy', traceparent: tp[1], request: `SIGNALS (${mode}, in process)\ntraceparent: ${tp[1]}`, response: `decision: ${out.decision}\nreason: ${out.reasonCode}\ndecided by: ${out.decidedBy}` },
     ];
     traceHeader(res, hops);
-    return res.json({ ...out, workspace: ws, traceId: trace.traceId, hops, trace: evaluateTrace({ cast, out, traceparent: tp[0] }) });
+    const run = recordRun({ ws, store: workspaces, emit, mode, kind: 'evaluate', scenario: out.scenario, actor: out.agent, build: (stamp) => evaluateEvents(out, stamp) });
+    return res.json({ ...out, workspace: ws, runId: run.runId, traceId: trace.traceId, hops, trace: evaluateTrace({ cast, out, traceparent: tp[0] }) });
   }));
 
   api.get('/baseline', workspace, withWorkspace(({ ws, mode, req, res }) => {
@@ -175,19 +182,35 @@ export function createApp({ health = createHealth(), configFile = CONFIG, worksp
     return res.json({ entry, state: describeLearner(state.learner), log: workspaces.baseline(ws).log });
   }));
 
-  const flow = (list, run) => withWorkspace(({ ws, mode, req, res }) => {
+  // The OBO flow is recorded for the run panel (rule 27); the ID-JAG flow is not yet (see the README's follow-ups).
+  const flow = (list, run, recorded) => withWorkspace(({ ws, mode, req, res }) => {
     const id = req.body.scenario;
     if (typeof id !== 'string' || !list.some((s) => s.id === id)) return res.status(400).json({ error: 'unknown_scenario' });
     const out = run({ cast: castFor(req), scenario: id, mode, table, traceparent: req.headers.traceparent });
     workspaces.record(ws, { tab: run === runObo ? 'obo' : 'id-jag', scenario: id, decision: out.accepted ? 'accepted' : 'rejected', mode });
+    const recordedRun = recorded ? recordRun({ ws, store: workspaces, emit, mode, kind: 'obo', scenario: id, actor: out.attribution.actor, build: (stamp) => oboEvents(out, stamp) }) : null;
     traceHeader(res, out.hops);
     res.locals.preMasked = true;
-    return res.json(maskFlow({ ...out, workspace: ws }));
+    return res.json(maskFlow({ ...out, workspace: ws, ...(recordedRun ? { runId: recordedRun.runId } : {}) }));
   });
-  api.post('/obo', workspace, flow(OBO_SCENARIOS, runObo));
-  api.post('/idjag', workspace, flow(IDJAG_SCENARIOS, runIdJag));
+  api.post('/obo', workspace, flow(OBO_SCENARIOS, runObo, true));
+  api.post('/idjag', workspace, flow(IDJAG_SCENARIOS, runIdJag, false));
 
   api.get('/runs', workspace, (req, res) => { noStore(res); return res.json(workspaces.runs(req.ws)); });
+  // Rule 27: one stored run's record, in the mode the run was made in only (a run of the other mode is not found).
+  api.get('/run-record', workspace, async (req, res, next) => {
+    noStore(res);
+    const mode = typeof req.query.mode === 'string' ? modeOf(req.query.mode) : null;
+    if (!mode) return res.status(400).json({ error: 'bad_mode', detail: 'mode must be mock or live' });
+    const runId = req.query.runId;
+    if (typeof runId !== 'string' || !RUN_ID_RE.test(runId)) return res.status(400).json({ error: 'bad_run_id' });
+    const run = workspaces.run(req.ws, runId, mode);
+    if (!run) return res.status(404).json({ error: 'run_not_found' });
+    try { return res.json(await recordOf(run)); } catch (e) {
+      if (e instanceof RunObsError) return res.status(e.status || 400).json({ error: e.code, message: e.message });
+      return next(e);
+    }
+  });
   // Reset clears this workspace's runs and its Live baseline only.
   // Live Privilege check: send one text through the tenant's AI Guard and return the
   // gateway's own decision. Refused with a clear 503 when Real mode is not configured.
