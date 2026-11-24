@@ -48,6 +48,8 @@ export const PLACES = (p, q) => {
     'query story vertical': { method: 'GET', path: `/api/story?vertical=${q}` },
     'query diagram name': { method: 'GET', path: `/api/diagram?name=${q}&vertical=${q}` },
     'query baseline mode': { method: 'GET', path: `/api/baseline?mode=${q}&vertical=${q}` },
+    'query run-record runId': { method: 'GET', path: `/api/run-record?runId=${q}&mode=mock` },
+    'query run-record mode': { method: 'GET', path: `/api/run-record?runId=r1-00000000&mode=${q}` },
     'query info': { method: 'GET', path: `/api/info?${q}=${q}` },
     'query health': { method: 'GET', path: `/api/health?x=${q}` },
     'query runs': { method: 'GET', path: `/api/runs?x=${q}` },

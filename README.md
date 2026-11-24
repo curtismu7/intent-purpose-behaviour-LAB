@@ -93,6 +93,17 @@ npm run reset    # clears the default workspace's runs and live baseline (the UI
 
 `GET /api/health` returns `demo-health/1`. The workspace id comes in `X-Workspace`; every hop carries a W3C `traceparent`. Presenter mode: press `P` (Esc leaves); the simulation banner stays. `npm run mock-table`, `npm run talk-track` and `npm run content-pack` regenerate the generated files. The shared standalone drift and CSS checks (`check-drift.sh`, `check-css.sh`) are run by hand before a release; CI does not run them. See `docs/safety.md`.
 
+## What each layer logged for a run
+
+Under the **Three signals** and **On-behalf-of** tabs, the panel "What each layer logged for this run" shows one run's rows across six layers (person, agent, Authorize, Privilege, gateway, resource). Mock rows are the mock's own events. Nothing is read from a log. **Live runs are not stored:** the Live engine is in this process, not a product log, so a Live evaluate or OBO run has no record and no run id (its decision lines carry `run=none`).
+
+- **Where the lab's logs live.** The lab's standard output (`docker compose logs`): one line per policy-point decision, `<time> intent-purpose-behaviour-lab decision step=... actor=... result=passed|stopped|unclear run=...`. The lab reads its own output back in no mode.
+- **Not logged, and why.** Person (no sign-in step: the caller is a sample identity). Authorize (the lab does not call PingOne Authorize). Privilege for the OBO run (the flow has no Privilege policy step). Resource for the evaluate run (it does not call the MCP server). The ID-JAG run is not recorded yet: it has no panel. Real privilege-check (`/api/privilege-check`) is not recorded yet: its reply is the gateway's own decision, and the lab has no measured mapping of that reply to panel rows. So no Real run has a record: Live evaluate and OBO runs are not stored (see above).
+- **Time.** Each row's time is when the lab computed it, and the stdout line carries the same time. Nothing is re-run to build a record.
+- **Mode.** A run is kept in the mode it was made in. A run of the other mode is not found.
+- **Reset** clears the workspace's runs with its other state, and the page's run panel shows the record only for the run on screen.
+- **Not verified.** The rows describe what this lab's own engine decided. They say nothing about what a Ping product did on a tenant.
+
 ## Docker (optional)
 
 ```

@@ -6,6 +6,7 @@ import PrivilegeCheck from "./PrivilegeCheck";
 import Json from "./Json";
 import PolicyEditor from "./PolicyEditor";
 import GatewayTrace from "../gateway-trace/GatewayTrace";
+import RunPanel from "./RunPanel";
 
 const bar = (v) => `${Math.round(v * 100)}%`;
 const PHASE_TEXT = {
@@ -137,6 +138,8 @@ export default function ThreeSignals({ story, mode, policy, setPolicy, resetSign
           <PrivilegeCheck call={view.call} />
           {!customResult?.ok && <p className="muted">With the default policy this call is expected to be: <b>{sc.expected}</b>.</p>}
           {result && !customResult?.ok && <Hops hops={result.hops} traceId={result.traceId} />}
+          {/* The panel takes the mode of the result it shows (not the header's), so a switch cannot ask for this run in the other mode. */}
+          <RunPanel runId={view.runId} mode={view.mode} />
         </>
       )}
       <PolicyEditor policy={policy} defaults={story.policyDefaults} swaggerFields={story.swaggerFields} source={story.fieldSource} labSource={story.fieldSourceLab} onChange={setPolicy} error={policyError} />

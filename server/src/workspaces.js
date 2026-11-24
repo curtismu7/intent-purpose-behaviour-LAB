@@ -21,7 +21,7 @@ export function workspaceFrom(req) {
 
 export function createWorkspaces({ max = 500, ttlMs = 60 * 60 * 1000, now = Date.now } = {}) {
   const map = new Map(); // id -> { runs, baseline: { learner, log, counter }, at }; insertion order = oldest first
-  const fresh = () => ({ runs: [], baseline: { learner: createLearner(), log: [], counter: 0 }, intents: [], at: now() });
+  const fresh = () => ({ runs: [], obs: [], baseline: { learner: createLearner(), log: [], counter: 0 }, intents: [], at: now() });
   const sweep = () => {
     const t = now();
     for (const [id, v] of map) { if (t - v.at > ttlMs) map.delete(id); else break; }
@@ -32,6 +32,9 @@ export function createWorkspaces({ max = 500, ttlMs = 60 * 60 * 1000, now = Date
     runs(id) { sweep(); const v = map.get(id); return { workspace: id, runs: v ? v.runs : [] }; },
     // What is stored is masked when it is WRITTEN (strings and keys), so a record that a later code path forgot to clean never holds a credential-shaped value.
     record(id, run) { const v = touch(id); v.runs = [...v.runs, { ...maskDeep(run), at: now() }].slice(-MAX_RUNS); return this.runs(id); },
+    // Run records (rule 27) are kept per mode: the cap is per workspace AND per mode, so a Live run never evicts a Mock one.
+    addRun(id, run) { const v = touch(id); const same = v.obs.filter((r) => r.mode === run.mode); v.obs = [...v.obs.filter((r) => r.mode !== run.mode), ...[...same, run].slice(-MAX_RUNS)]; },
+    run(id, runId, mode) { const v = map.get(id); return v ? v.obs.find((r) => r.runId === runId && r.mode === mode) ?? null : null; },
     baseline(id) { return touch(id).baseline; },
     logBaseline(id, entry) { const b = touch(id).baseline; b.log = [...b.log, maskDeep(entry)].slice(-MAX_LOG); },
     intents(id) { return touch(id).intents ?? []; },
