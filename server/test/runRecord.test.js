@@ -11,9 +11,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-test('the README says why only the Mock runs are recorded, and that Real privilege-check has no run record yet', () => {
+test('the README says Live runs are recorded as simulated rows, and that Real privilege-check has no run record yet', () => {
   const readme = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../README.md'), 'utf8');
-  assert.match(readme, /Live runs are not stored/);
+  assert.match(readme, /Live runs are recorded .{0,200}simulated/);
   assert.match(readme, /Real privilege-check .{0,80}not recorded/);
 });
 
@@ -50,20 +50,35 @@ test('a Mock evaluate: every row is simulated, the record passes the shared asse
   });
 });
 
-test('a Live evaluate is not stored: no run id, no record in either mode, and its stdout lines carry run=none', async () => {
+test('a Live evaluate is recorded like a Mock one: a run id, a live-mode record of simulated rows, and stdout lines that carry the run id', async () => {
   const lines = [];
   await serve(async (url) => {
     const run = await json(await post(url, '/api/evaluate', { mode: 'live', scenario: 'legit-lookup' }));
     assert.equal(run.status, 200);
-    assert.equal(run.body.runId, null);
-    assert.ok(lines.length > 0, 'the decision line is still written');
-    assert.ok(lines.every((l) => / run=none$/.test(l)), lines.join('\n'));
-    for (const mode of ['live', 'mock']) {
-      const rec = await json(await get(url, `/api/run-record?runId=r1-00000000&mode=${mode}`));
-      assert.equal(rec.status, 404);
-      assert.equal(rec.body.error, 'run_not_found');
-    }
+    assert.match(run.body.runId, RUN_ID_RE);
+    assert.ok(lines.length > 0, 'the decision line is written');
+    assert.ok(lines.every((l) => l.endsWith(` run=${run.body.runId}`)), lines.join('\n'));
+    const rec = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=live`));
+    assert.equal(rec.status, 200);
+    assert.equal(rec.body.source, 'mock', 'the engine computed the rows: they are simulated, never read from a log');
+    assert.deepEqual(assertRunObservability(rec.body), []);
+    assert.ok(rec.body.rows.some((r) => r.origin === 'simulated'));
+    assert.ok(rec.body.rows.every((r) => r.origin === 'simulated' || r.origin === 'not-logged'), 'no row is read from a log or taken from a response');
+    const inMock = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=mock`));
+    assert.equal(inMock.status, 404, 'a Live run is not found in Mock');
   }, { runLog: (l) => lines.push(l) });
+});
+
+test('a Live OBO run is recorded: a run id and a live-mode record that passes the shared assertion', async () => {
+  await serve(async (url) => {
+    const ok = await json(await post(url, '/api/obo', { mode: 'live', scenario: 'ok' }));
+    assert.equal(ok.status, 200);
+    assert.match(ok.body.runId, RUN_ID_RE);
+    const rec = await json(await get(url, `/api/run-record?runId=${ok.body.runId}&mode=live`));
+    assert.equal(rec.status, 200);
+    assert.deepEqual(assertRunObservability(rec.body), []);
+    assert.deepEqual(rec.body.summary, { allowed: 1, refused: 0, blocked: 0, info: 3, unverified: 0 });
+  });
 });
 
 test('an OBO run: issuing and checks are info, and only the MCP server decides; a refused run is counted as refused', async () => {
