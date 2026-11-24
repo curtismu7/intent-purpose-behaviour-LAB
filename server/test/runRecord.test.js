@@ -7,6 +7,15 @@ import { createWorkspaces } from '../src/workspaces.js';
 import { assertRunObservability, classify } from '../src/runObservability.js';
 import { RUN_ID_RE, clean, decisionLine, evaluateEvents, newRunId, oboEvents } from '../src/runRecord.js';
 import { post } from './helpers.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+test('the README says why only the Mock runs are recorded, and that Real privilege-check has no run record yet', () => {
+  const readme = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../README.md'), 'utf8');
+  assert.match(readme, /Live runs are not stored/);
+  assert.match(readme, /Real privilege-check .{0,80}not recorded/);
+});
 
 const MATCHER_WORDS = /\b(refused|denied|rejected|forbidden|failed|invalid|expired|mismatch|token|audience|scope|served)\b/i;
 const PRODUCTS = ['pingfederate', 'pinggateway', 'privilege-gateway', 'privilege-siem', 'promptguard', 'mcp-server'];
@@ -41,27 +50,29 @@ test('a Mock evaluate: every row is simulated, the record passes the shared asse
   });
 });
 
-test('a Live evaluate is recorded as response rows, and the run is not found in Mock', async () => {
+test('a Live evaluate is not stored: no run id, no record in either mode, and its stdout lines carry run=none', async () => {
+  const lines = [];
   await serve(async (url) => {
     const run = await json(await post(url, '/api/evaluate', { mode: 'live', scenario: 'legit-lookup' }));
-    const rec = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=live`));
-    assert.equal(rec.body.source, 'real');
-    assert.deepEqual(assertRunObservability(rec.body), []);
-    assert.ok(rec.body.rows.every((r) => r.origin === 'response' || r.origin === 'not-logged'));
-    assert.ok(rec.body.rows.some((r) => r.origin === 'response'));
-    const other = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=mock`));
-    assert.equal(other.status, 404);
-    assert.equal(other.body.error, 'run_not_found');
-  });
+    assert.equal(run.status, 200);
+    assert.equal(run.body.runId, null);
+    assert.ok(lines.length > 0, 'the decision line is still written');
+    assert.ok(lines.every((l) => / run=none$/.test(l)), lines.join('\n'));
+    for (const mode of ['live', 'mock']) {
+      const rec = await json(await get(url, `/api/run-record?runId=r1-00000000&mode=${mode}`));
+      assert.equal(rec.status, 404);
+      assert.equal(rec.body.error, 'run_not_found');
+    }
+  }, { runLog: (l) => lines.push(l) });
 });
 
 test('an OBO run: issuing and checks are info, and only the MCP server decides; a refused run is counted as refused', async () => {
   await serve(async (url) => {
-    const ok = await json(await post(url, '/api/obo', { mode: 'live', scenario: 'ok' }));
-    const okRec = await json(await get(url, `/api/run-record?runId=${ok.body.runId}&mode=live`));
+    const ok = await json(await post(url, '/api/obo', { mode: 'mock', scenario: 'ok' }));
+    const okRec = await json(await get(url, `/api/run-record?runId=${ok.body.runId}&mode=mock`));
     assert.deepEqual(okRec.body.summary, { allowed: 1, refused: 0, blocked: 0, info: 3, unverified: 0 });
-    const expired = await json(await post(url, '/api/obo', { mode: 'live', scenario: 'expired' }));
-    const expRec = await json(await get(url, `/api/run-record?runId=${expired.body.runId}&mode=live`));
+    const expired = await json(await post(url, '/api/obo', { mode: 'mock', scenario: 'expired' }));
+    const expRec = await json(await get(url, `/api/run-record?runId=${expired.body.runId}&mode=mock`));
     assert.equal(expRec.body.summary.refused, 1);
     assert.equal(expRec.body.summary.allowed, 0);
     assert.deepEqual(assertRunObservability(expRec.body), []);
@@ -72,7 +83,7 @@ test('the stdout line: one per policy decision, and every line is quiet under th
   const lines = [];
   await serve(async (url) => {
     await post(url, '/api/evaluate', { mode: 'mock', scenario: 'legit-lookup' });
-    await post(url, '/api/obo', { mode: 'live', scenario: 'ok' });
+    await post(url, '/api/obo', { mode: 'mock', scenario: 'ok' });
   }, { runLog: (l) => lines.push(l) });
   assert.equal(lines.length, 2, 'one evaluate decision and one OBO decision');
   for (const line of lines) {

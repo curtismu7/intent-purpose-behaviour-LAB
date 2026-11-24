@@ -39,9 +39,27 @@ test('compose, the example settings and the Dockerfile never mount the Docker so
   }
 });
 
-test('no lab file outside the vendored files carries the RUN_OBS_ prefix (the web code included)', () => {
+// The files of a lab (its web and server source) that carry a RUN_OBS_ name. The one exemption is the vendored core, by exact path.
+function runObsNameHits(labRoot) {
   const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? (d.name === 'node_modules' || d.name === 'run-observability' ? [] : walk(path.join(dir, d.name))) : [path.join(dir, d.name)]));
-  for (const f of [...walk(path.join(root, 'web/src')), ...walk(path.join(root, 'server/src')).filter((x) => !x.endsWith(`${path.sep}runObservability.js`))]) {
-    assert.ok(!/RUN_OBS_/.test(fs.readFileSync(f, 'utf8')), `${path.relative(root, f)} carries a RUN_OBS_ name`);
+  const core = path.join(labRoot, 'server/src/runObservability.js');
+  const files = [...walk(path.join(labRoot, 'web/src')), ...walk(path.join(labRoot, 'server/src'))];
+  return files.filter((f) => f !== core && /RUN_OBS_/.test(fs.readFileSync(f, 'utf8'))).map((f) => path.relative(labRoot, f));
+}
+
+test('no lab file outside the vendored files carries the RUN_OBS_ prefix (the web code included)', () => {
+  assert.deepEqual(runObsNameHits(root), []);
+});
+
+test('the core is exempt by exact path only: a file with the same name in another folder is still scanned', () => {
+  const copy = fs.mkdtempSync(path.join(os.tmpdir(), 'ipb-name-'));
+  try {
+    fs.mkdirSync(path.join(copy, 'web/src'), { recursive: true });
+    fs.mkdirSync(path.join(copy, 'server/src/nested'), { recursive: true });
+    fs.writeFileSync(path.join(copy, 'server/src/runObservability.js'), 'export {};\n');
+    fs.writeFileSync(path.join(copy, 'server/src/nested/runObservability.js'), 'const x = "RUN_OBS_LOG";\n');
+    assert.deepEqual(runObsNameHits(copy), [path.join('server', 'src', 'nested', 'runObservability.js')]);
+  } finally {
+    fs.rmSync(copy, { recursive: true, force: true });
   }
 });

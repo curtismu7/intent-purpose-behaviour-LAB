@@ -1,12 +1,12 @@
 // Rule 27: this lab's half of the shared run-observability panel. A run (one evaluate or OBO request) computes its events ONCE, stamps
 // each once, stores them in the workspace, and writes one stdout line per POLICY-POINT decision from the same events. The record the
-// panel reads is built from the stored events by the shared core (runObservability.js). The lab reads no product log: every row is
-// either a simulated event (Mock: the lab's table) or a response its own engine gave (Live: the in-process engine). Nothing is logged.
+// panel reads is built from the stored events by the shared core (runObservability.js). The lab reads no product log, and every stored
+// row is a simulated event the Mock computed from its table. Live runs (the in-process engine) are not stored: a Real record would claim
+// a basis the lab does not have, so a Live run gets no run id and its decision lines carry run=none.
 import crypto from 'node:crypto';
 import { LAYERS, createMasker, createRunObservability } from './runObservability.js';
 
 export const LAB = 'intent-purpose-behaviour-lab';
-const SOURCE_OF = { mock: 'mock', live: 'real' };
 const RESULT_OF = { allowed: 'passed', refused: 'stopped', info: 'unclear' };
 const { mask } = createMasker();
 const obs = createRunObservability({ readers: [] });
@@ -63,27 +63,29 @@ const NOT_ASKED = {
   resource: 'This run does not call the MCP server, so no resource decision exists for it.',
 };
 
-// The six layer specs for one run. A layer with no event is not-logged with its reason; the Mock gets simulated rows, Live gets response rows.
+// The six layer specs for one run. A layer with no event is not-logged with its reason; every row is a simulated Mock event.
 function specsFor(run) {
   return LAYERS.map((layer) => {
     const rows = run.events.filter((e) => e.layer === layer).map(({ at, outcome, message }) => ({ at, outcome, message }));
-    const spec = { layer, products: [] };
+    const spec = { layer, products: [], simulated: rows };
     if (!rows.length) spec.reason = NOT_ASKED[layer] || 'This run does not reach this layer.';
-    if (run.source === 'mock') spec.simulated = rows;
-    else spec.responses = rows;
     return spec;
   });
 }
 
 // Computes the run ONCE: id first, then the events (each stamped once), then the run is stored, then its stdout lines are written.
-// `store` is the workspaces store (addRun); `emit(run, events)` writes the lines and must never throw into the answer.
+// `store` is the workspaces store (addRun); `emit(run)` writes the lines and must never throw into the answer. A Live run is not stored:
+// its lines are written with no run id (run=none) and the answer carries runId null.
 export function recordRun({ ws, store, emit, mode, kind, scenario, actor, build }) {
-  const source = SOURCE_OF[mode];
-  if (!source) throw new Error(`no run source for mode ${typeof mode}`);
+  if (mode !== 'mock' && mode !== 'live') throw new Error(`no run mode ${typeof mode}`);
+  if (mode === 'live') {
+    emit({ actor, events: build(nowIso) });
+    return { runId: null };
+  }
   const runId = newRunId();
   const startedAt = nowIso();
   const events = build(nowIso);
-  const run = { runId, kind, scenario, mode, source, startedAt, endedAt: nowIso(), actor, events };
+  const run = { runId, kind, scenario, mode, source: 'mock', startedAt, endedAt: nowIso(), actor, events };
   store.addRun(ws, run);
   emit(run);
   return run;
