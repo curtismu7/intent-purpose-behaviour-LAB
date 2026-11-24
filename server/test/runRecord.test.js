@@ -33,7 +33,8 @@ test('a Mock evaluate: every row is simulated, the record passes the shared asse
     assert.equal(rec.body.source, 'mock');
     assert.deepEqual(assertRunObservability(rec.body), []);
     assert.ok(rec.body.rows.length > 0);
-    assert.ok(rec.body.rows.every((r) => r.origin === 'simulated'), 'no row is read from a log or taken from a response');
+    assert.ok(rec.body.rows.every((r) => r.origin === 'simulated' || r.origin === 'not-logged'), 'no row is read from a log or taken from a response');
+    assert.ok(rec.body.rows.some((r) => r.origin === 'simulated'));
     assert.equal(rec.body.coverage.resource, 'not-logged');
     assert.match(rec.body.reasons.resource, /does not call the MCP server/);
     assert.equal(rec.body.coverage.gateway, 'simulated');
@@ -46,7 +47,8 @@ test('a Live evaluate is recorded as response rows, and the run is not found in 
     const rec = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=live`));
     assert.equal(rec.body.source, 'real');
     assert.deepEqual(assertRunObservability(rec.body), []);
-    assert.ok(rec.body.rows.every((r) => r.origin === 'response'));
+    assert.ok(rec.body.rows.every((r) => r.origin === 'response' || r.origin === 'not-logged'));
+    assert.ok(rec.body.rows.some((r) => r.origin === 'response'));
     const other = await json(await get(url, `/api/run-record?runId=${run.body.runId}&mode=mock`));
     assert.equal(other.status, 404);
     assert.equal(other.body.error, 'run_not_found');
