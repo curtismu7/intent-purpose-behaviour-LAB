@@ -21,7 +21,6 @@ export default function RunPanel({ runId, mode }) {
     if (!runId) return undefined;
     const asked = `${mode}:${runId}`;
     let current = true;
-    const source = mode === "live" ? "real" : "mock";
     workspaceFetch(`/api/run-record?runId=${encodeURIComponent(runId)}&mode=${mode}`, { method: "GET" })
       .then(async (r) => {
         let body = null;
@@ -30,7 +29,7 @@ export default function RunPanel({ runId, mode }) {
       })
       .then(({ ok, body }) => {
         if (!current) return;
-        if (ok && isRecord(body) && body.source === source) setState({ key: asked, record: body, error: null });
+        if (ok && isRecord(body) && body.source === "mock") setState({ key: asked, record: body, error: null });
         else setState({ key: asked, record: null, error: (body && typeof body.message === "string" && body.message) || "the record for this run is not available" });
       }, () => { if (current) setState({ key: asked, record: null, error: "request failed" }); });
     return () => { current = false; };
@@ -43,7 +42,8 @@ export default function RunPanel({ runId, mode }) {
       <p className="muted">The lab writes one line per policy decision to its own standard output. This is the record of this run, built from what the lab recorded for it.</p>
       {!mine && <p className="muted" role="status">Collecting this run's record...</p>}
       {mine && state.error && <div className="app-error" role="alert">Could not show this run's record ({state.error}).</div>}
-      {mine && state.record && <RunObservability record={state.record} source={mode === "live" ? "real" : "mock"} streams={STREAMS} />}
+      {mode === "live" && <p className="muted" data-testid="run-live-note">Live: the lab's own in-process engine computed these rows. They are simulated, not logged: no product log was read.</p>}
+      {mine && state.record && <RunObservability record={state.record} source="mock" streams={STREAMS} />}
     </div>
   );
 }

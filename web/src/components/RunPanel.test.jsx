@@ -39,6 +39,14 @@ describe("RunPanel", () => {
     await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/Could not show this run's record/));
   });
 
+  it("the panel renders for a Live run, asks for the live record, and says the lab's engine computed the rows", async () => {
+    vi.mocked(workspaceFetch).mockResolvedValueOnce(answer(true, record("r1", "mock")));
+    render(<RunPanel runId="r1" mode="live" />);
+    await screen.findByRole("heading", { name: "What each layer logged for this run" });
+    expect(vi.mocked(workspaceFetch).mock.calls[0][0]).toMatch(/mode=live/);
+    expect(screen.getByTestId("run-live-note").textContent).toMatch(/in-process engine computed these rows.*simulated, not logged/);
+  });
+
   it("refuses a record whose source is not the page's mode", async () => {
     vi.mocked(workspaceFetch).mockResolvedValueOnce(answer(true, record("r1", "real")));
     render(<RunPanel runId="r1" mode="mock" />);
