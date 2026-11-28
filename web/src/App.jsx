@@ -9,6 +9,8 @@ import CustomerIntent from "./components/CustomerIntent";
 import TalkTrack from "./components/TalkTrack";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu";
 import TalkTrackDialog from "./talk-track/TalkTrackDialog.jsx";
+import HelpDialog from "./help-dialog/HelpDialog.jsx";
+import { HELP_SECTIONS } from "./helpContent";
 import { getJson, postJson, resetWorkspace } from "./api";
 import ShelfLink from "./components/ShelfLink.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
@@ -54,6 +56,7 @@ export default function App() {
   const [requested, setRequested] = useState(hashParts().scenario);
   const [presenter, setPresenter] = useState(false);
   const [talkOpen, setTalkOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
   const [resetMsg, setResetMsg] = useState("");
   const [theme, setTheme] = useState(initialTheme);
@@ -128,7 +131,7 @@ export default function App() {
           fontSize={{ value: fontStep, onChange: setFontStep }}
           present={{ active: presenter, onToggle: () => setPresenter((v) => !v), label: "Presenter (P)" }}
           talkTrack={{ active: talkOpen, onToggle: () => setTalkOpen((v) => !v) }}
-          help={{ href: "https://github.com/curtismu7/intent-purpose-behaviour-LAB#readme" }}
+          help={{ onClick: () => setHelpOpen(true), title: "What this lab is, and what is simulated" }}
           version={LAB_VERSION}
           onReset={reset}
         >
@@ -163,6 +166,7 @@ export default function App() {
       </main>
 
       <TalkTrackDialog isOpen={talkOpen} onClose={() => setTalkOpen(false)} talk={story?.talkTrack ?? []} />
+      <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} sections={HELP_SECTIONS} docsUrl="https://github.com/curtismu7/intent-purpose-behaviour-LAB#readme" />
     </div>
   );
 }
