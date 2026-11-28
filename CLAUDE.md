@@ -1,6 +1,6 @@
 # intent-purpose-behaviour-LAB
 
-Demo-tier standalone app: Ping "Intent, Purpose and Behaviour" release claims (deck slide 48, release 2026-11-02), plus on-behalf-of and ID-JAG. Simulated. **Every product claim is "Ping release claim, UNVERIFIED on our tenant"** (banner on every tab, presenter mode too).
+Demo-tier standalone app: Ping "Intent, Purpose and Behaviour" release claims (deck slide 48, release 2026-11-02), plus on-behalf-of and ID-JAG. Simulated. **Every product claim is "Ping release claim, UNVERIFIED on our tenant"** (in the MOCK or REAL modal and on every claim tag; the persistent banner was replaced by the modal, owner 2026-11-28).
 
 - Run: `./scripts/run.sh` (http://localhost:7100). Test: `npm test` (server is `node --test test/*.test.js`, a glob; web is vitest against the real Express app). Preflight `npm run doctor`. Reset `npm run reset`. Docker: `HOST_PORT=7100 docker compose up --build -d`. Node 26 only.
 - Settings: the one shared file `~/Development/.env` (or `STANDALONE_ENV`), optional; this app's key is `IPB_LAB_MODE` (never a bare `MODE`). The doctor reports the file's presence and mode, never values.

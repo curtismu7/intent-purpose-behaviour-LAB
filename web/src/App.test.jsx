@@ -5,7 +5,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { createApp, startHttpServer } from "../../server/src/app.js";
 import { createHealth } from "../../server/src/health.js";
-import App, { BANNER_UNKNOWN, TABS } from "./App";
+import App, { TABS } from "./App";
 import { labelOffsets } from "./components/PatternDiagram";
 import { visible } from "./safeText";
 import { setJsonView } from "./components/JsonPane";
@@ -32,52 +32,82 @@ const mount = async () => { render(<App />); await screen.findByTestId("verdict"
 const tab = (name) => userEvent.click(within(screen.getByRole("navigation", { name: "Lab sections" })).getByRole("link", { name }));
 
 describe("shell", () => {
-  it("says it is simulated and UNVERIFIED on every tab, in presenter mode too, and shows the mode", async () => {
+  it("opens on a MOCK modal that says it is simulated and UNVERIFIED, closes on Got it, and the old banner is gone on every tab, in presenter mode too", async () => {
     await mount();
-    expect(screen.getByTestId("banner")).toHaveTextContent(/UNVERIFIED on our tenant/);
-    expect(screen.getByTestId("banner")).toHaveTextContent(/MOCK mode/);
+    const modal = screen.getByTestId("mode-modal");
+    expect(modal).toHaveAttribute("data-mode", "mock");
+    expect(modal).toHaveTextContent(/MOCK/);
+    expect(modal).toHaveTextContent(/Simulated: pure in-process tables/);
+    expect(modal).toHaveTextContent(/UNVERIFIED on our tenant/);
+    await userEvent.click(screen.getByTestId("mode-modal-ok"));
+    expect(screen.queryByTestId("mode-modal")).toBeNull();
+    expect(screen.queryByTestId("banner")).toBeNull();
     expect(screen.getByTestId("mode")).toHaveTextContent("Mock");
-    // Standard shell: the dark shell bar first, then <main> whose first child is the simulation banner.
+    // Standard shell: the dark shell bar first, then <main> with no simulation banner.
     const bar = document.querySelector("header.shell-bar");
     expect(bar).not.toBeNull();
     expect(bar.querySelector(".shell-brand h1")).toHaveTextContent("Intent Purpose Behaviour LAB");
     expect(within(bar).getByTestId("mode")).toBeInTheDocument();
     expect(within(bar).getByTestId("top-menu")).toHaveClass("shell-right");
-    expect(document.querySelector("main").firstElementChild).toBe(screen.getByTestId("banner"));
+    expect(document.querySelector("main > .banner")).toBeNull();
     expect(bar.compareDocumentPosition(document.querySelector("main")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     for (const t of TABS) {
       await tab(t.label);
       expect(within(screen.getByRole("navigation", { name: "Lab sections" })).getByRole("link", { name: t.label })).toHaveAttribute("aria-current", "page");
       expect(document.querySelectorAll('.shell-nav [aria-current="page"]')).toHaveLength(1);
-      expect(screen.getByTestId("banner")).toHaveTextContent(/UNVERIFIED on our tenant/);
+      expect(screen.queryByTestId("banner")).toBeNull();
+      expect(screen.queryByTestId("mode-modal")).toBeNull();
     }
     await tab("Three signals");
     await userEvent.keyboard("p");
     expect(screen.getByTestId("presenter-say")).toBeInTheDocument();
-    expect(screen.getByTestId("banner")).toBeVisible();
-    expect(screen.getByTestId("banner")).toHaveTextContent(/SIMULATED.*UNVERIFIED on our tenant/);
+    expect(screen.queryByTestId("banner")).toBeNull();
     expect(screen.getByTestId("presenter-say")).toBeVisible();
     expect(screen.getByTestId("presenter")).toHaveTextContent("Exit present");
     await userEvent.keyboard("{Escape}");
     expect(screen.queryByTestId("presenter-say")).toBeNull();
-    expect(BANNER_UNKNOWN).toMatch(/UNVERIFIED/);
   }, 60000);
 
-  it("the Mock/Real toggle switches both directions through the server, updates the chip, the banner and the data, and is remembered", async () => {
+  it("the Mock/Real toggle switches both directions through the server, updates the chip, the modal and the data, and is remembered", async () => {
     await mount();
+    expect(screen.getByTestId("mode-modal")).toHaveAttribute("data-mode", "mock");
+    await userEvent.click(screen.getByTestId("mode-modal-ok"));
     await userEvent.selectOptions(screen.getByTestId("mode-select"), "real");
     await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("Live"), T);
-    await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/LIVE mode.*real RS256 signing/));
+    // MOCK was dismissed; Live shows the REAL modal, whose line says the engine is still simulated and the claims UNVERIFIED.
+    await waitFor(() => expect(screen.getByTestId("mode-modal")).toHaveAttribute("data-mode", "real"), T);
+    expect(screen.getByTestId("mode-modal")).toHaveTextContent(/REAL/);
+    expect(screen.getByTestId("mode-modal")).toHaveTextContent(/Live: the lab's own local engine.*still simulated.*UNVERIFIED on our tenant/);
     expect(window.localStorage.getItem("ipb.mode")).toBe("live");
     expect(screen.getByTestId("mode-select")).toHaveValue("real");
     // Data is reloaded for the new mode: the Three signals panel answers in live mode.
     await waitFor(() => expect(screen.getByTestId("verdict")).toBeInTheDocument());
-    // Back to Mock: the banner follows the server's answer again.
+    await userEvent.click(screen.getByTestId("mode-modal-ok"));
+    // Back to Mock: it was dismissed this session, so it stays closed.
     await userEvent.selectOptions(screen.getByTestId("mode-select"), "mock");
-    await waitFor(() => expect(screen.getByTestId("banner")).toHaveTextContent(/MOCK mode/));
+    await waitFor(() => expect(screen.getByTestId("mode")).toHaveTextContent("Mock"), T);
+    expect(screen.queryByTestId("mode-modal")).toBeNull();
     expect(screen.getByTestId("mode")).toHaveTextContent("Mock");
     expect(screen.getByTestId("mode-select")).toHaveValue("mock");
     expect(window.localStorage.getItem("ipb.mode")).toBe("mock");
+  }, 60000);
+});
+
+describe("mode modal on load", () => {
+  it("a lab already in Live shows MOCK until /api/info answers, then REAL, even after MOCK was dismissed", async () => {
+    await realFetch(`${base}/api/mode`, { method: "POST", headers: { "content-type": "application/json", origin: base }, body: '{"source":"real"}' });
+    let release; const held = new Promise((r) => { release = r; });
+    const passthrough = globalThis.fetch;
+    globalThis.fetch = (u, init) => (typeof u === "string" && u.startsWith("/api/info") ? held.then(() => passthrough(u, init)) : passthrough(u, init));
+    try {
+      render(<App />);
+      expect((await screen.findByTestId("mode-modal")).dataset.mode).toBe("mock");
+      await userEvent.click(screen.getByTestId("mode-modal-ok"));
+      expect(screen.queryByTestId("mode-modal")).toBeNull();
+      release();
+      await waitFor(() => expect(screen.getByTestId("mode-modal")).toHaveAttribute("data-mode", "real"), T);
+      expect(screen.getByTestId("mode-modal")).toHaveTextContent(/UNVERIFIED on our tenant/);
+    } finally { release(); globalThis.fetch = passthrough; }
   }, 60000);
 });
 

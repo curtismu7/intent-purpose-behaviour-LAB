@@ -69,7 +69,7 @@ Other variables: `VITE_PORT` (Vite dev server, default 7101, `npm run dev -w web
 
 ## Mock and live modes
 
-The header has a **Mock / Live** toggle on every page, and the banner and the mode chip show the same mode. Mock reads the tables. Live runs the real engine: real signing and verification, a real baseline learner of your own, and a form for your own call. Both modes are loopback-only with zero outbound calls (a test asserts it).
+The header has a **Mock / Live** toggle on every page, and the mode chip and the MOCK or REAL modal that opens the page show the same mode. Mock reads the tables. Live runs the real engine: real signing and verification, a real baseline learner of your own, and a form for your own call. Both modes are loopback-only with zero outbound calls (a test asserts it).
 
 ### What you type is masked, and what the server refuses
 
@@ -91,7 +91,7 @@ npm run doctor   # 16 checks; PORT=7109 npm run doctor to use a spare port
 npm run reset    # clears the default workspace's runs and live baseline (the UI Reset also restores the policy and the diagram)
 ```
 
-`GET /api/health` returns `demo-health/1`. The workspace id comes in `X-Workspace`; every hop carries a W3C `traceparent`. Presenter mode: press `P` (Esc leaves); the simulation banner stays. `npm run mock-table`, `npm run talk-track` and `npm run content-pack` regenerate the generated files. The shared standalone drift and CSS checks (`check-drift.sh`, `check-css.sh`) are run by hand before a release; CI does not run them. See `docs/safety.md`.
+`GET /api/health` returns `demo-health/1`. The workspace id comes in `X-Workspace`; every hop carries a W3C `traceparent`. Presenter mode: press `P` (Esc leaves). `npm run mock-table`, `npm run talk-track` and `npm run content-pack` regenerate the generated files. The shared standalone drift and CSS checks (`check-drift.sh`, `check-css.sh`) are run by hand before a release; CI does not run them. See `docs/safety.md`.
 
 ## What each layer logged for a run
 

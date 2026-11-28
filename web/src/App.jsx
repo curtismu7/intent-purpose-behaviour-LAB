@@ -14,6 +14,7 @@ import { HELP_SECTIONS } from "./helpContent";
 import { getJson, postJson, resetWorkspace } from "./api";
 import ShelfLink from "./components/ShelfLink.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
+import ModeModal from "./mode-modal/ModeModal.jsx";
 
 const LAB_VERSION = (() => { try { return JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version || null; } catch { return null; } })();
 
@@ -27,9 +28,12 @@ export const TABS = [
   { id: "diagram", label: "Diagram" },
   { id: "talk", label: "Talk track" },
 ];
-// The banner is never blank and never claims one mode before it knows: until the story answers it says both, honestly.
-const TAIL = "Every product claim is a Ping release claim, UNVERIFIED on our tenant (release 2026-11-02). Nothing here calls a real gateway, identity provider or tenant.";
-export const BANNER_UNKNOWN = `SIMULATED, MOCK or LIVE mode (loopback only, no outbound network). ${TAIL}`;
+// Real-or-mock modal: "real" here is the lab's Live mode, its own local engine, so the REAL line says it is still simulated. Both lines carry the
+// claim label the old banner showed on every tab (the per-card claim tags stay).
+const MODE_LINES = {
+  mock: "Simulated: pure in-process tables, no real gateway, identity provider or tenant. Every product claim is a Ping release claim, UNVERIFIED on our tenant (release 2026-11-02).",
+  real: "Live: the lab's own local engine (real RS256 signing and verification), loopback only, still simulated: no real gateway, identity provider or tenant. Every product claim is a Ping release claim, UNVERIFIED on our tenant (release 2026-11-02).",
+};
 const PRESENTER_TALK = { signals: ["say-first", "three-signals", "tiers", "intent", "purpose", "unverified"], intents: ["intent", "catalogue"], "customer-intent": ["catalogue", "unverified"], baseline: ["behaviour"], obo: ["obo"], idjag: ["id-jag"], diagram: ["three-signals"] };
 const MODE_KEY = "ipb.mode";
 const THEME_KEY = "ipb.theme";
@@ -108,7 +112,6 @@ export default function App() {
     setResetMsg(ok ? "Reset: your workspace's runs and live baseline are cleared, the policy is back to default and the diagram is back in place." : "Reset failed on the server; the view was reset.");
   }, [story]);
 
-  const banner = story && mode ? story.banner[mode] : BANNER_UNKNOWN;
   const ready = story && mode && policy;
   return (
     <div className={`app${presenter ? " app--presenter" : ""}`}>
@@ -140,7 +143,6 @@ export default function App() {
         </TopMenu>
       </header>
       <main className="page">
-        <p className="banner" data-state={mode === "live" ? "live" : undefined} role="status" data-testid="banner">{banner}</p>
         {error && <p className="app-error" role="alert">Could not load the lab ({error}). Is the server running?</p>}
         <p className="sr-only" role="status" aria-live="polite">{resetMsg}</p>
         {!presenter && story && <p className="intro">{story.intro}</p>}
@@ -165,6 +167,7 @@ export default function App() {
         </div>
       </main>
 
+      <ModeModal mode={mode === "live" ? "real" : "mock"} lines={MODE_LINES} storageKey="ipb-mode" />
       <TalkTrackDialog isOpen={talkOpen} onClose={() => setTalkOpen(false)} talk={story?.talkTrack ?? []} />
       <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} sections={HELP_SECTIONS} docsUrl="https://github.com/curtismu7/intent-purpose-behaviour-LAB#readme" />
     </div>

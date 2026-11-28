@@ -23,6 +23,6 @@ export const HELP_SECTIONS = [
   },
   {
     heading: "Mock vs Live honesty",
-    body: "Mock mode (default) runs offline from tables. Live mode is the lab's own local engine: real RS256 signing with a key generated in this process, real verification, real baseline learning, real classifier — but the 'issuer', 'MCP server' and 'partner app' are function calls, and Live never leaves loopback and never touches a tenant. The banner on every page names the mode you are in; until the story answers, it honestly says both. Under each result the trace panel shows what the lab really computed ('checked') versus what is only 'inferred' or 'observed'."
+    body: "Mock mode (default) runs offline from tables. Live mode is the lab's own local engine: real RS256 signing with a key generated in this process, real verification, real baseline learning, real classifier — but the 'issuer', 'MCP server' and 'partner app' are function calls, and Live never leaves loopback and never touches a tenant. The MOCK or REAL modal that opens the page names the mode you are in (REAL there means Live). Under each result the trace panel shows what the lab really computed ('checked') versus what is only 'inferred' or 'observed'."
   }
 ];
